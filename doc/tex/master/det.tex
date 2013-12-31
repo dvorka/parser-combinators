@@ -1,0 +1,498 @@
+\chapter{Deterministické konstruktory parserù}\label{DeterministickeKonstruktoryParseru}
+Existuje mnoho rùzných metod syntaktické analýzy.
+Kombinátory parserù pracují vzhledem ke zpùsobu své implementace
+v~jazyce Prolog a~jeho výpoèetní strategii algoritmem syntaktické 
+analýzy \emph{shora dolù}.\footnote{V~této kapitole budeme 
+pou¾ívat pojmy z~teorie jazykù a~konstrukce pøekladaèù v~bì¾nì ustálené 
+èeské terminologii. V~pøípadì potøeby prosím nahlédnìte do literatury 
+(napøíklad \cite{Melichar}, \cite{Aho} nebo \cite{Waite}).}
+Terminálním symbolùm
+gramatiky analyzovaného jazyka odpovídají parsery terminálních
+symbolù (jako \verb+symbol+ a~\verb+token+) a~neterminálním
+parsery vytvoøené pomocí konstruktorù. 
+
+Pøi analýze shora dolù se buduje derivaèní strom.
+Zaèíná se od poèáteèního symbolu
+gramatiky (koøene derivaèního stromu) a~postupnì jsou doplòovány jeho 
+hrany a~uzly smìrem shora dolù tj. od koøenového uzlu k~uzlùm listovým.
+
+Derivace se vyznaèují tím, ¾e pøi ka¾dém kroku 
+nahrazují nejlevìj¹í neterminální symbol ve vìtné formì 
+(sentenci s~neterminály). Takové derivace se nazývají 
+\emph{levé derivace}.
+
+Pøi analýze tedy v¾dy nahrazujeme nejlevìj¹í neterminální symbol pravou
+stranou pravidla (je volán parser neterminálního symbolu stojící v~sekvenèní 
+kompozici nejvíce vlevo). Pravých stran mù¾e existovat nìkolik --- mno¾ina pravidel se stejným
+neterminálním symbolem na levé stranì odpovídá v~kombinátorech
+parserù alternativní kompozici parserù vytvoøených dle jejich pravých
+stran.
+
+Základní problém spoèívá ve výbìru pravidla pro náhradu aktuálního symbolu
+(tj. ve výbìru alternativy).
+Pøi øe¹ení tohoto problému pøicházejí v~úvahu následující pøístupy:
+\begin{enumerate}\index{rozklad!deterministický}\index{rozklad!s návratem}
+\item Tradièní kombinátory parserù\footnote{Jak bylo ji¾ zmínìno v pøedmluvì,
+metoda syntaktické analýzy provádìná kombinátory parserù je nazývána 
+\uv{recursive descent parsing}.}\\
+Provést výbìr jednoho pravidla. Uká¾e-li se pozdìji, ¾e výbìr nebyl správný,
+je tøeba proces analýzy \emph{vrátit} a~vybrat pravidlo jiné.  Tento
+postup se nazývá \emph{analýza s~návratem} èili backtracking.
+
+Pøesto¾e je poèet návratù omezen, je zøejmé, ¾e analýza s~návratem je 
+èasovì nároèná a~kromì toho je zdrojem komplikací pøi dal¹ích fázích
+zpracování vstupu (napø. v~pøekladaèích plnìní tabulek symbolù apod.
+nelze \uv{odestát}).
+
+\item Deterministické kombinátory parserù\footnote{Jsou speciálním 
+pøípadem~1.; tento zpùsob analýzy bývá oznaèován jako \uv{predictive parsing}.}\\
+Provést výbìr správné alternativy na základì doplòujících informací
+získaných v~prùbìhu dosavadní analýzy a~podle toho, v~jakém kontextu
+je náhrada neterminálního symbolu provádìna.
+
+Tento typ analýzy se nazývá deterministická syntaktická analýza. Její
+nevýhodou je, ¾e ji nelze pou¾ít pro v¹echny bezkontextové gramatiky.
+\end{enumerate}
+Bezkontextové jazyky, které lze analyzovat pomocí deterministických
+analyzátorù se nazývají \emph{deterministické bezkontextové jazyky}
+a~tvoøí jejich zajímavou podmno¾inu z~hlediska  praktického pou¾ití. 
+Vý¹e popsané gramatiky se nazývají LL($k$) proto¾e ètou vstupní 
+øetìzec zleva doprava, vytváøejí levý rozklad a~pøitom pou¾ívají 
+informaci o~nejbli¾¹ích $k$ symbolech.
+
+\vskip 2mm
+\noindent
+Uveïme nìkolik nejdùle¾itìj¹ích vlastností deterministických jazykù:
+\begin{description}
+\item [Efektivnost rozkladu.] Pro \emph{libovolný} deterministický
+bezkontextový jazyk
+lze sestrojit syntaktický analyzátor pracující v~\emph{lineárním èase}
+s~\emph{lineárním pamì»ovým prostorem}.
+\item [Snadná lokalizace chyb.] Proto¾e deteterministický syntaktický 
+analyzátor pracuje bez návratù, mù¾e urèit pomìrnì jednodu¹e místo 
+chyby~--- je nalezena pøesnì ve chvíli, kdy se objeví.
+
+U~syntaktické analýzy s~návratem tomu tak není~--- díky navracení
+nelze pøíèinu neúspìchu jednoznaènì urèit. Navracení toti¾ 
+nastává buï pøi výskytu chyby nebo pøi
+testování ¹patné vìtve výpoètu a~tyto situace nelze jednoznaènì odli¹it.
+\item [Snadné napojení následného zpracování.] Typickým pøíkladem 
+vyu¾ití této vlastnosti jsou ji¾ zmínìné pøekladaèe. Neexistují zde
+problémy s~odebíráním  získaných tokenù z~tabulek symbolù a~podobnì. 
+Zároveò lze nìkteré 
+èásti sémantické analýzy vèlenit pøímo do syntaktického 
+analyzátoru a~obì fáze do jisté míry spojit.
+\item [Automatizovatelnost.] Analyzátory lze vytváøet pomocí standardních
+algoritmù, které vytváøejí rozkladové tabulky.
+\end{description}\vskip -2mm
+A¾ dosud jsme vytváøeli pomocí konstruktorù parsery, které
+provádìly analýzu vstupního textu nedeterministicky. Tento
+zpùsob má dvì hlavní výhody:
+\begin{itemize}
+\item Parsery je mo¾né konstruovat rychle a~není nutné se zabývat jejich
+analýzou, ani pøípadnými komplikacemi pøi výpoètu (pokud nejsou
+napø. pøíèinou zacyklení). Z~hlediska ruèního vytváøení je to
+bezpochyby pohodlnìj¹í cesta.
+\item Nedeterministický parser je zpravidla men¹í ne¾ parser 
+deterministický. Cenou za rychlý parser mohou být výraznì vìt¹í po¾adavky
+na prostor, ve kterém je kód parseru ulo¾en.
+\end{itemize}
+Nevýhody nedeterministického zpùsobu analýzy jsou v¹eobecnì známé~---
+obecnì nesrovnatelnì vìt¹í prostorová, ale pøedev¹ím èasová slo¾itost.
+Proto má nepochybnì smysl, aby jsme se deterministickými parsery zabývali
+i~v~této práci. Na¹ím cílem bude nejen umo¾nit, ale navíc také 
+usnadnit programátorovi jejich vytváøení. Na rozdíl od bì¾nì 
+pou¾ívaných postupù v~nástrojích pro generování parserù se bude
+vìt¹ina analýzy, která bývá provádìna \uv{offline}
+provádìt \uv{online} --- tedy v~prùbìhu rozkladu. Dùvodem
+je samozøejmì \uv{ruèní} konstrukce parserù.
+
+V~centru na¹eho zájmu budou analyzátory pracující algoritmem 
+shora dolù --- konkrétnì analyzátory LL(1) jazykù.
+
+
+
+\section{My¹lenka}\label{Myslenka}
+Aby jsme mohli urèit, ¾e gramatika je typu LL(1), je nutné, aby jsme
+byli schopni:
+\begin{itemize}
+\item Ovìøit, zda parser postavený na dané gramatice akceptuje prázdný 
+øetìzec --- obsahuje $\varepsilon$-pøechod.
+\item Získat mno¾inu FIRST obsahující terminály, které jsou pøipraveny 
+pøijmout jednotlivé mo¾nosti v~alternativní kompozicích.
+\item Urèit mno¾iny FOLLOW obsahující pro ka¾dý neterminál symboly,
+jen¾ za ním mohou v~derivaci následovat.
+\end{itemize}
+Na základì tìchto informací pak mù¾eme rozhodnout, zda lze rozklad provést
+deterministicky.
+K~ovìøení vý¹e uvedených vlastností gramatiky pou¾ijeme
+módy parserù, kde ve¹kerá analýza bude provádìna za bìhu. 
+Urèení daného atributu bude realizováno spu¹tìním parseru
+ve speciálním re¾imu, v~nìm¾ bude schopen dané informace získat.
+
+Nejdøíve vytvoøíme mód pro ovìøení schopnosti pøijímat prázdný øetìzec,
+pak pro výpoèet mno¾iny FIRST a~koneènì v~èásti \ref{MnozinaFOLLOW} 
+uká¾eme, jak získat postaèující èást mno¾iny FOLLOW.
+
+Vzhledem k~pou¾ití módù musíme roz¹íøit pouze definice základních primitiv 
+a~konstruktorù. U~slo¾itìj¹ích parserù vy¹¹ích úrovní získáváme
+odpovídající chování v~daném módu \uv{zdarma}.
+
+
+
+\section{Detekce $\varepsilon$-pøechodù}\label{DetekceEpsilonPøechodù}
+\index{módy parserù!\verb+empty/0+}
+V~tomto odstavci vytvoøíme mód, v~nìm¾ spu¹tìný parser urèí, zda
+je èi není schopen pøijímat prázdný øetìzec. Pro tento
+úèel zavedeme nový selektor \verb|empty/0|.
+V~módu \verb|empty/0| je provedena abstraktní interpretace za úèelem
+analýzy parseru. Pokud je schopen pøijmout prázdný øetìzec, vydá 
+atom \verb|true|, v~opaèném pøípadì vydá \verb|false|.
+
+\vskip 1mm
+\noindent
+Nejdøíve si uká¾eme nìkterá ze základních primitiv:
+\begin{quote}\begin{verbatim}
+epsilon(empty+true).
+return(_,empty+true).
+terminate(empty+false).
+
+item(empty+false).
+
+fulfil(_,empty+false).
+symbol(_,empty+false).
+\end{verbatim}\end{quote}
+Roz¹íøení definic konstruktorù je velmi pøirozené.
+Sekvenèní kompozice parserù $P1$ a~$P2$ pøijímá prázdný øetìzec právì tehdy,
+kdy¾ jej pøijímá jak $P1$ tak $P2$:
+\begin{quote}\begin{verbatim}
+<&>(P1,P2,empty+Empty):-
+        empty+Empty1 :-> P1,
+        empty+Empty2 :-> P2,
+        pcAND(Empty1,Empty2,Empty).
+\end{verbatim}\end{quote}
+Alternativní kompozice parserù $P1$ a~$P2$ pøijímá prázdný øetìzec právì
+tehdy, kdy¾ jej pøijímá buï parser $P1$ nebo $P2$:
+\begin{quote}\begin{verbatim}
+<:>(P1,P2,empty+Empty):-
+        empty+Empty1 :-> P1,
+        empty+Empty2 :-> P2,
+        pcOR(Empty1,Empty2,Empty).
+\end{verbatim}\end{quote}
+Doplnìní klauzulí módu je nutné pouze u~základních kombinátorù a~mutátorù.
+Slo¾itìj¹í parsery nemusejí být doplòovány ani modifikovány,
+proto¾e jsou z~nich slo¾eny. Mù¾eme si proto hned ukázat parser 
+\verb|double| v~módu \verb+empty/0+. 
+Bez zásahù do zdrojového kódu nám vydá po¾adovaný výsledek:
+\begin{quote}\begin{verbatim}
+?- empty+Empty :-> double.
+Empty = false 
+Yes
+\end{verbatim}\end{quote}
+Výpoèet v~\verb+empty/0+ se od doposud pøedstavených módù li¹í tím, ¾e
+má charakter \emph{abstraktní interpretace} parseru. Pøi výpoètu se 
+neprovádí rozklad, ale získávají se informace o~jeho vlastnostech.
+Stejný charakter bude mít i~mód, který vytvoøíme v~následující èásti.
+
+
+
+\section{Mno¾ina FIRST}\label{MnozinaFIRST}
+\index{mno¾ina!FIRST}
+\index{módy parserù!\verb+eFirst/0+}
+\index{módy parserù!\verb+eFirst/1+}
+\index{módy parserù!\verb+first/1+}
+Obdobnì jako v~pøedchozím pøípadì budeme postupovat i~pøi výpoètu
+mno¾iny FIRST, v~nìm¾ pou¾ijeme také mód \verb|empty/0|.
+Situace zde bude jen nepatrnì slo¾itìj¹í.
+
+\vskip 1mm
+\noindent
+Nejdøíve si uveïme formální definici mno¾iny FIRST:
+\begin{quote}
+\noindent
+{\bf Definice:}\\
+Pro vìtnou formu $\alpha$ v~bezkontextové gramatice G=(N,T,P,S) platí:
+$$
+FIRST(\alpha) = \{a| \alpha \Rightarrow^{*} a\beta, a~\in T, \beta \in (N \cup T)^{*} \} \cup \{\varepsilon | \alpha \Rightarrow^{*} \varepsilon\}
+$$ 
+Mno¾ina $FIRST(\alpha)$ obsahuje v¹echny terminální symboly, které se mohou
+vyskytnout na zaèátku øetìzcù derivovaných z~$\alpha$. Jestli¾e lze 
+z~$\alpha$ derivovat také prázdný øetìzec, pak jej mno¾ina FIRST 
+obsahuje rovnì¾.
+\end{quote}
+Mno¾inu FIRST budeme pou¾ívat pøi rozhodování, který z~parserù
+v~alternativní kompozici vybrat. Její výpoèet budeme provádìt spoleènì 
+s~urèením schopnosti pøijímat prázdný øetìzec v~módu \verb+eFirst/0+, jen¾
+bude místo seznamu úspì¹ných rozkladù vydávat strukturu:
+\begin{quote}
+$eFirst(Empty, FIRST)$
+\end{quote}
+Navíc je pøipraven mód \verb+first/0+, který vyu¾ívá \verb+eFirst/0+
+a~vydává pouze mno¾inu FIRST.
+FIRST nebude reprezentována výètem výhledù, ale 
+seznamem podmínek, které budou dostateènì pøesnì vymezovat její rozsah.
+
+\vskip 1mm
+\noindent
+Uka¾me si nejprve roz¹íøení definic základních primitiv:
+\begin{quote}\begin{verbatim}
+epsilon(first+[]).
+return(_,first+[]).
+terminate(first+[]).
+\end{verbatim}\end{quote}
+Primitivum \verb+item+ pøijímá ze vstupního textu libovolnou polo¾ku:
+\begin{quote}\begin{verbatim}
+item(first+[pcTrue]).
+\end{verbatim}\end{quote}
+Parser terminálních symbolù \verb+symbol+ u¾ mù¾e pou¾ít implicitní cestu
+výpoètu:
+\begin{quote}\begin{verbatim}
+fulfil(C,first+[C]).
+symbol(S,I+FIRST):-                  
+        fulfil(==(S),I+FIRST).
+\end{verbatim}\end{quote}
+FIRST sekvenèní kompozice $P1$ a~$P2$ je tvoøena mno¾inou FIRST($P1$).
+Pokud navíc $P1$ pøijímá prázdný øetìzec je sjednocením mno¾in FIRST($P1$)
+a~FIRST($P2$):
+\begin{quote}\begin{verbatim}
+<&>(P1,P2,eFirst+eFirst(Empty,FIRST)):-
+        eFirst+eFirst(Empty1,FIRST1) :-> P1,
+        (Empty1=true -> first+FIRST2 :-> P2
+                     ;  FIRST2=[]),
+        append(FIRST1,FIRST2,FIRST),
+        <&>(P1,P2,empty+Empty).
+<&>(P1,P2,first+FIRST):-
+        <&>(P1,P2,eFirst+eFirst(_,FIRST)).
+\end{verbatim}\end{quote}
+Mno¾ina FIRST alternativní kompozice parserù $P1$ a~$P2$ je v¾dy
+sjednocením mno¾in FIRST($P1$) a~FIRST($P2$):
+\begin{quote}\begin{verbatim}
+<:>(P1,P2,first+L):-
+        first+L1 :-> P1,
+        first+L2 :-> P2,
+        append(L1,L2,L).
+\end{verbatim}\end{quote}
+Jako pøíklad si uká¾eme parser \verb|double| v~módu \verb+first/0+:
+\begin{quote}\begin{verbatim}
+?- first+L :-> double.
+L = [lElementOf("-0123456789"])]
+Yes
+\end{verbatim}\end{quote}
+Také pro tyto módy jsou pøipraveny predikáty $invoke$$<$$Mode$$>$, 
+jako \verb+invokeEmpty+ a~\verb+invokeFIRST+.
+
+
+
+\input{dfollow}
+
+
+
+\section{Deterministické parsery}\label{DeterministickeParsery}
+\index{módy parserù!ll1@\verb+ll1+}
+V~tomto odstavci v¹e, co jsme si v~této kapitole pøipravili, 
+koneènì spojíme a~vytvoøíme mód \verb+ll1/4+, ve kterém budou parsery 
+provádìt deterministickou syntaktickou analýzu jazykù generovaných LL(1) 
+gramatikami.
+
+\vskip 2mm
+\noindent
+Selektor módu \verb+ll1/4+ má následující signaturu:\\
+\verb+   + $ll1(Options, LookAhead, DFOLLOW, Selector)$\\
+kde jednotlivé parametry mají následující význam:
+\begin{description}
+ \item [Options] je parametr s~volbami módu, který obsahuje tøi parametry
+  {\bf Algorithm}, {\bf Dbf} a~{\bf First} zøetìzené
+  v~tomto poøadí operátorem \verb+^/2+:
+  \begin{description}
+  \item [Algorithm]$\in \{lazy, early\}$ urèuje zpùsob výpoètu mno¾iny DFOLLOW
+viz \ref{VypocetDFOLLOW}.
+  \item [Dbf]$\in \{assert, off\}$ rozhoduje o~tom, zda se mají jednou vypoètené mno¾iny FIRST
+ukládat pro pozdìj¹í pou¾ití èi nikoli.
+  \item [First]$\in \{cond, enum, bst, set\}$ urèuje zpùsob reprezentace
+mno¾in FIRST v~rozkladové tabulce uvnitø kombinátoru alternativní kompozice.
+   \begin{description}
+    \item [cond:] reprezentace mno¾in FIRST seznamem podmínek.
+    \item [enum:] mno¾ina FIRST reprezentovaná výètem, jednotlivý výhled
+je párován s~parserem, který se má v~pøípadì tohoto výhledu pou¾ít.
+    \item [bst:] rozkladová tabulka reprezentovaná binárním vyhledávacím stromem,
+ve kterém je klíèem pro vyhledávání aktuální výhled. Pro tento výhled
+se pak najde odpovídající parser z~pùvodní alternativní kompozice.
+    \item [set:] mno¾ina FIRST reprezentovaná výètem výhledù, pro který se
+má daný parser pou¾ít.
+   \end{description}
+  \end{description}
+ \item [LookAhead] obsahuje výhled parseru ve vstupním textu.
+ \item [DFOLLOW] je parametr pro pøenos prùbì¾nì vypoèítávané \emph{dynamické}
+ mno¾iny FOLLOW, je inicializován pøíznakem konce vstupu.
+ \item [Selector] je selektor vnoøeného módu dle obrázku \ref{ImgVnorovaniModu}
+\end{description}
+Spou¹tìní parseru v~tomto módu se typicky provádí pomocí 
+predikátu \verb+invokeLL1+.
+
+\vskip 2mm
+\noindent
+Pro mód \verb+ll1/4+ jsou rozhodující procedury variant kombinátorù 
+alternativní kompozice, ve kterých se provádí rozhodnutí 
+o~pokraèování výpoètu dle aktuálního výhledu. 
+V~prùbìhu rozkladu vyu¾ívá \verb+ll1/4+ módy \verb+empty/0+ a~\verb+first/0+
+pro abstraktní interpretaci parseru s~cílem vytvoøení rozkladové
+tabulky. V~kombinátoru alternativní kompozice se pøi volbì
+vhodné alternativy postupuje dle následujícího algoritmu:
+
+\vskip 3mm
+\subsubsection*{Algoritmus \showPcAlgorithm:}\vskip -3mm
+Výbìr parseru v alternativní kompozici v módu \verb+ll1/4+.
+
+\begin{tabular}{lp{10cm}}
+\emph{Vstup:}\quad & Mno¾ina DFOLLOW a výhled $LA$.\\
+\emph{Výstup:}\quad & Seznam úspì¹ných rozkladù získaný aplikací parseru $P$.\\
+\emph{Metoda:}&
+\end{tabular}
+\begin{quote}
+\begin{enumerate}
+\item Proveï \emph{mìlké} zanoøení pøes v¹echny bezprostøednì následující 
+varianty kombinátorù alternativní kompozice. Získá¹ tak mno¾inu $Alts$ 
+v¹ech alternativ, je¾  pøicházejí v~úvahu pro pokraèování v~rozkladu.
+
+\item Pou¾ij mód \verb+first/0+ pro výpoèet mno¾in $FIRST_{i}$ jednotlivých 
+alternativ. 
+
+\item Ovìø, zda mezi mno¾inami $FIRST_{i}$ do¹lo ke konfliktu, tj.:\\
+\verb+     +$\exists\quad i, j, t:\quad t \in T \wedge t \in FIRST_i \wedge t \in FIRST_j \wedge i \not= j$\\
+V~pøípadì kolize pøejdi do 6, jinak pokraèuj krokem 4.
+
+Vytvoø fragment tabulky a ulo¾ jej dle parametrù selektoru 
+pro pozdìj¹í pou¾ití ve zvolené reprezentaci.
+\item Jestli¾e:\\
+\verb+     +$\exists\quad P_i:\quad P_i \in Alts \wedge LA \in FIRST_i$\\
+potom $P := P_i$ a pøejdi do 7, v opaèném pøípadì pokraèuj v 5.
+
+\item Proto¾e mno¾ina $FIRST_i$, která by obsahovala symbol $LA$ neexistuje, 
+pokus se o~$\varepsilon$-pøechod. Nejvý¹e jedna z~alternativ mù¾e 
+obsahovat ve své mno¾inì FIRST prázdný øetìzec (ovìøeno 
+v~kroku 3). Pokud:\\
+\verb+     +$\exists\quad P_i:\quad P_i \in Alts \wedge \varepsilon \in FIRST_i$\\
+proveï výpoèet mno¾iny DFOLLOW dle \ref{VypocetDFOLLOW}. Jestli¾e:\\
+\verb+     +$\quad LA \in DFOLLOW$\\
+pak $P := P_i$ a pøejdi do 7, v~opaèném pøípadì neexistuje alternativa 
+umo¾òující pokraèování ve výpoètu a~rozklad musí být 
+ukonèen~--- krok~6.
+
+Vzájemná disjunktnost \emph{celé} DFOLLOW a~mno¾in FIRST se vzhledem
+k~èasové slo¾itosti této operace neovìøuje.
+\item Chyba --- pokus se vyhledat ve vnoøeném selektoru pozici ve 
+vstupním textu a~vypi¹ chybové hlá¹ení.
+\item Aplikuj parser $P$.
+\end{enumerate}
+\end{quote}
+
+\vskip 1mm
+\noindent
+Pokud je v~selektoru módu povoleno ukládání, první spu¹tìní parseru 
+sice je¹tì není pøíli¹ rychlé, ale pøi dal¹ích jeho aplikacích
+se ji¾ jejich abstraktní interpretace provádí jen výjimeènì a~vyu¾ívají 
+se pøi ní ji¾ døíve získaná data.
+
+
+
+
+\subsection{Parsery s~výhledem}\label{ParserySVyhledem}
+\index{módy parserù!pseudoll1@\verb+pseudoll1+}
+Módy \verb|empty| a~\verb|first|, výhled ve vstupním textu, DFOLLOW
+a~rozkladové tabulky lze pou¾ít i~pro nejednoznaèné 
+gramatiky. Syntaktickou analýzu jazykù generovaných tìmito gramatikami
+tak lze podstatným zpùsobem zefektivit. 
+
+Úpravou \verb+ll1/4+ vytvoøíme mód \verb|pseudoll1/4|, který
+bude umo¾òovat provádìní rozkladu pomocí tabulek i~v~pøípadì kolizí
+mezi mno¾inami FIRST jednotlivých alternativ.
+
+
+\vskip 2mm
+\noindent
+Selektor módu \verb+pseudoll1/4+ má následující signaturu:\\
+\verb+    + $pseudoll1(Options, LookAhead, DFOLLOW, Selector)$\\
+kde jednotlivé parametry mají stejný význam jako v~pøípadì
+\verb+ll1/4+, pouze v~parametru $Options$ je navíc volba
+{\bf OptionalDFOLLOW}$\in \{useFOLLOW, noFOLLOW\}$, která povoluje
+resp. zakazuje pou¾ití mno¾iny DFOLLOW. Pro spou¹tìní parserù v~tomto 
+módu je pøipraven predikát \verb+invokePseudoLL1+.
+
+Rozklad probíhá podobnì jako v~módu \verb+ll1/4+. V~kombinátoru 
+alternativní kompozice se pøi výbìru vhodné alternativy postupuje 
+dle následujícího algoritmu:
+
+\vskip 3mm
+\subsubsection*{Algoritmus \showPcAlgorithm:}\vskip -3mm
+Výbìr parseru v alternativní kompozici v módu \verb+pseudoll1/4+.
+
+\begin{tabular}{lp{10cm}}
+\emph{Vstup:}\quad & Mno¾ina DFOLLOW, výhled $LA$ a varianta kombinátoru 
+		     alternativní kompozice $V \in \{ <:>, <:, :> \}$.\\
+\emph{Výstup:}\quad & Seznam úspì¹ných rozkladù získaný aplikací mno¾iny parserù $P$.\\
+\emph{Metoda:}&
+\end{tabular}
+\begin{quote}
+\begin{enumerate}
+\item $P = \emptyset$
+
+\item Proveï \emph{mìlké} zanoøení pøes v¹echny bezprostøednì následující 
+kombinátory alternativní kompozice $V$ (vzhledem k~mo¾nému výskytu kolizí 
+v~dal¹ích krocích má pou¾ití variant kombinátoru alternativní kompozice 
+se zkráceným vyhodnocením smysl). Získá¹ tak mno¾inu $Alts$ 
+v¹ech alternativ, je¾  pøicházejí v~úvahu pro pokraèování v~rozkladu.
+
+\item Pou¾ij mód \verb+first/0+ pro výpoèet mno¾in $FIRST_{i}$ jednotlivých 
+alternativ. 
+
+\item Z parserù, jejich¾ mno¾iny $FIRST$ mají neprázdný prùnik, 
+vytvoø alternativní kompozice pomocí kombinátoru $V$~--- získá¹ tak
+mno¾inu $FactAlts$. Mno¾iny $FIRST$  parserù z $FactAlts$ jsou ji¾ disjunktní.
+
+V pøípadech, kdy do¹lo ke kolizi, vypi¹ varování spoleènì
+se symbolem, který ji zpùsobil.
+
+Dle parametrù selektoru vytvoø fragment tabulky (se slouèenými
+\uv{kolizními} alternativami) a ulo¾ jej pro pozdìj¹í 
+pou¾ití ve zvolené reprezentaci.
+
+\item Jesli¾e:\\
+\verb+     +$\exists\quad P_i:\quad P_i \in FactAlts \wedge LA \in FIRST_i$\\
+potom $P\quad \cup = P_i$.
+             
+\item Pokus se o~$\varepsilon$-pøechod (alternativy, které obsahovaly
+ve své mno¾inì $FIRST$ prázdný øetìzec byly slouèeny v~kroku 3). Pokud:\\
+\verb+     +$\exists\quad P_i:\quad P_i \in FactAlts \wedge \varepsilon \in FIRST_i$\\
+proveï podle volby {\bf OptionalDFOLLOW} výpoèet mno¾iny DFOLLOW 
+dle \ref{VypocetDFOLLOW}. Jestli¾e:\\
+\verb+     +$\quad LA \in DFOLLOW$\\
+pak $P\quad \cup= P_i$.
+
+\item Pokud:\\
+\verb+     +$P\quad \not= \emptyset$\\ 
+pokraèuj krokem 8. Jinak neexistuje alternativa pro pokraèování 
+ve výpoètu a~rozklad musí být ukonèen~--- pokus se vyhledat ve vnoøeném 
+selektoru pozici ve vstupním textu a~vypi¹ chybové hlá¹ení. Konec.
+
+\item Aplikuj parsery z mno¾iny $P$ a výsledky ulo¾ do seznamu úspì¹ných
+rozkladù.
+\end{enumerate}
+\end{quote}
+Mód \verb+pseudoll1/4+ lze tedy pou¾ít k~zrychlení rozkladu libovolného
+knihovního parseru. Jeho pou¾ití není vázáno na ¾ádná omezení kladená 
+na analyzovaný jazyk, jako tomu bylo v~pøípadì \verb+ll1/4+.
+
+
+\vskip 5mm
+V~této kapitole se nám podaøilo pomocí pùvodní programovací techniky módù 
+implementovat do knihovny kombinátorù parserù schopnost provádìt
+deterministickou syntaktickou analýzu, která má z~hlediska praktické
+pou¾itelnosti nejvìt¹í význam.
+
+Navíc byl pøipraven mód pro spu¹tìní libovolného parseru vytvoøeného
+v~knihovnì v~\uv{pseudodeterministickém módu}, jen¾ umo¾òuje provádìt
+podstatnì efektivnìj¹í strukturální analýzu textu ne¾ pøi jinde bì¾nì
+pou¾íváné klasické analýze s~návratem.
+
+\endinput
+-------------------------------------------------------------------------------

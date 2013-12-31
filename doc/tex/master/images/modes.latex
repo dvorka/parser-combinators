@@ -1,0 +1,34 @@
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(4704,2994)(79,-2458)
+\thinlines
+\special{ps: gsave 0 0 0 setrgbcolor}\put( 91,-466){\framebox(4680,315){}}
+\put(181,-376){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}off/2, line/2, lineCol/3, vlnka/3, encode/2, lookAhead/2, prn/1\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(3016,209){\framebox(1755,315){}}
+\put(3106,299){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}quickS/1, quickFile/1\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put( 91,209){\framebox(810,315){}}
+\put(181,299){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}s/1, file/1\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put( 91,-1141){\framebox(1350,315){}}
+\put(136,-1051){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}ll1/4, pseudoll1/4\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(4186,-1141){\framebox(585,315){}}
+\put(4276,-1051){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}alt/2\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put( 91,-1771){\framebox(2655,315){}}
+\put(181,-1681){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}empty/0, first/0, eFirst/0, eFirst/1\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(946,-2176){\framebox(315,225){}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(991,-1951){\line( 0,-1){225}}
+\special{ps: grestore}\put(1486,-2131){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}vzájemnì lze vnoøovat uvnitø skupiny\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(946,-2446){\framebox(315,225){}}
+\put(1486,-2401){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}vzájemné vnoøování není pøípustné\special{ps: grestore}}}}
+\special{ps: gsave 0 0 0 setrgbcolor}\put(451,209){\vector( 0,-1){360}}
+\special{ps: grestore}\special{ps: gsave 0 0 0 setrgbcolor}\put(451,-466){\vector( 0,-1){360}}
+\special{ps: grestore}\special{ps: gsave 0 0 0 setrgbcolor}\put(4456,209){\vector( 0,-1){360}}
+\special{ps: grestore}\special{ps: gsave 0 0 0 setrgbcolor}\put(4456,-466){\vector( 0,-1){360}}
+\special{ps: grestore}\special{ps: gsave 0 0 0 setrgbcolor}\put(136,-151){\line( 0,-1){315}}
+\special{ps: grestore}\put(136,-2131){\makebox(0,0)[lb]{\smash{\SetFigFont{10}{14.4}{\rmdefault}{\mddefault}{\updefault}\special{ps: gsave 0 0 0 setrgbcolor}Legenda:\special{ps: grestore}}}}
+\end{picture}

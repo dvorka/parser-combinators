@@ -1,0 +1,12 @@
+pcI.pl
+pcII.pl
+pcIII.pl
+	Zaklad knihovny, tak jak byl popsan v textu prace.
+
+		pcI.pl 		... Kapitola 1 - Kapitola 3
+		pcII.pl         ... Kapitola 4, Kapitola 5
+		pcIII.pl        ... Kapitola 5 a dalsi
+
+        Soubory je nutne konzultovat pomoci ../docI.pl resp. ../docII.pl.
+
+- EOF -

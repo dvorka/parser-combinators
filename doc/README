@@ -1,0 +1,33 @@
+./
+	Dokumentace:
+
+html/	
+	... dokumentace ve formatu HTML
+tex/    
+	... dokumentace ve forme zdrojovych textu pro CsLaTeX
+ps/
+	... poscriptova verze
+
+ Jednotlive adresare obsahuji nasledujici texty:
+	library   ... dokumentace knihovny kombinatoru parseru
+        master	  ... text diplomove prace
+        prologdoc ... dokumentace programu PrologDoc
+        hilex     ... dokumentace programu hilex
+
+Makefile
+	Soubor pro make:
+        make dvi
+        	... vygeneruje dvi soubory
+        make ps
+        	... vygeneruje Postcript verzi do adresáøe /ps
+        make html
+        	... do adresáøe /html vygeneruje HTML verze textu
+        make doc
+        	... dvi, ps a html verze textu
+	make release
+        	... vygeneruje nove verze veskere dokumentace
+                
+/pc/src/auxiliary/XchgEncBody
+	Script pro dodatecne transformace HTML souboru.
+
+-EOF-

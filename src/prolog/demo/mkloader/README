@@ -1,0 +1,14 @@
+./
+	MkLoader - program pro generovani zavadecu zdrojovych souboru
+        jazyka Prolog (volan z /pc/src/prolog/mkloader.sh).
+
+mkloader.pl
+	Soubor se zdrojovym textem.
+
+mkloader.sh
+	Spousteci skript pro SWI Prolog.
+
+go.sh
+  	Zavadec programu.
+        
+- EOF -

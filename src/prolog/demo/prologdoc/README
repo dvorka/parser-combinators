@@ -1,0 +1,42 @@
+./
+	PrologDoc - program vytvarejici dokumentaci z okomentovanych
+	            zdrojovych textu jazyka Prolog ve formatu HTML
+                    a LaTeX.
+
+prologdoc.pl pdgenhtml.pl pdgenlatex.pl
+	Soubory se zdrojovym textem.
+
+prologdoc.sh
+	Spousteci skript programu PrologDoc pro SWI Prolog.
+
+mkpcdoc.sh
+	Vytvori dokumentaci knihovny kombinatoru parseru.
+mkprologdoc.sh
+	Vytvori dokumentaci programu Prologdoc.
+mkhilexdoc.sh
+	Vytvori dokumentaci programu Hilex.
+
+go.sh
+	Zavadec programu.
+
+doc/
+	Adresar do ktereho je dokumentace generovana.
+
+
+
+Dokumentace
+-----------
+/pc/doc/html/prologdoc                                  
+	HTML dokumentace programu PrologDoc vygenerovana jim samotnym.
+/pc/doc/html/library
+	HTML dokumentace knihovny kombinatoru parseru vygenerovana programem
+        PrologDoc.
+/pc/doc/html/hilex
+	HTML dokumentace programu Hilex vygenerovana pomoci PrologDoc.
+
+/pc/doc/tex/prologdoc
+/pc/doc/tex/library
+/pc/doc/tex/hilex
+	CsLaTeXove verze dokumentace vygenerovane programem PrologDoc.
+
+- EOF -

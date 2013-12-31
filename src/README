@@ -1,0 +1,12 @@
+./	
+	Zdrojove soubory.
+
+auxiliary/
+	Pomocne programy (shell skripty, bin, zdrojove soubory)
+        a konfiguracni soubory.
+
+prolog/
+	Prologovske zdrojove soubory.
+
+- EOF -
+ 

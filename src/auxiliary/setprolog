@@ -1,0 +1,50 @@
+#! /bin/bash
+#------------------------------------------------------------------------------
+#                          Install: set Prolog interpret
+#
+#                                   Martin Dvorak
+#                                       1999
+#------------------------------------------------------------------------------
+# ${1} ... prolog interpret path
+echo ""
+echo -e "\nProlog interpret triggers..."
+
+if [ ${#} = "0" ]
+ then
+  echo -e "\nError: argument is missing.\nBye!\n"
+  exit 1
+ fi
+ 
+if ! type awk  
+ then
+  echo -e "\nError: awk not found.\nBye!\n"
+  exit 1
+ fi
+
+if ! type ${1}  
+ then
+  echo -e "\nError: Prolog interpret '${1}' not found - please edit Makefile.common.\nBye!\n"
+  exit 1
+ fi
+
+CURRENT_PATH=""
+
+echo "/PROLOG=/ { printf \"PROLOG=$1\\n\" }" > setprolog.awk
+echo "!/PROLOG=/ { print \$0 }" >> setprolog.awk
+
+find -name "*.sh" | while read FILE
+ do
+  
+  echo -n " --> ${CURRENT_PATH}${FILE}"
+
+  cat ${CURRENT_PATH}${FILE} > tempfile
+  echo -n "."
+  cat tempfile | awk -f setprolog.awk > ${CURRENT_PATH}${FILE}
+
+  echo -n "."
+#  rm tempfile
+  echo "."
+
+done
+
+rm setprolog.awk tempfile

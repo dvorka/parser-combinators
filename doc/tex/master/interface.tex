@@ -1,0 +1,164 @@
+\section{Rozhraní parserù}\label{RozhraniParseru}
+
+% Motivace: 
+% 	Navrhujeme prototyp predikátu pro *nejednoznaèné* gramatiky.
+% To je velmi dùle¾ité. Proto potøebujeme operaci 2 (potøebujeme pro couvání)
+%  - nemáme paralelismus Jedním z cílù návrhu je umo¾nit vytváøení parserù 
+% pro nejednoznaèné gramatiky.
+
+Døíve ne¾ se pustíme do vytváøení prvních parserù, navrhneme obecný
+tvar prologovského predikátu, kterým budou realizovány. Nejprve se
+zamyslíme nad pou¾itím datových struktur pro vstup a~výstup.
+Pøi návrhu samotného obecného tvaru predikátu zohledníme, které
+syntaktické varianty nám mohou usnadnit implementaci, nebo dokonce
+umo¾nit provádìní nìkterých optimalizací.
+
+% Vstup: následující prvek ze vstupu, rozpoznání konce vstupu.
+%        rychlost - pamì»ová nároènost.
+% Jaké mo¾nosti se nabízely a zvolené øe¹ení.
+% Dal¹í mo¾nosti, které pøicházely v úvahu a proè nebyly nepou¾ity. 
+
+Vstupem parseru je lineární text. Ten mù¾e být reprezentován rùznými
+zpùsoby. Pro øe¹ení na¹í úlohy potøebujeme, aby zvolený zpùsob reprezentace
+umo¾òoval následující tøi operace:
+\begin{enumerate}
+\item Získání první polo¾ky.
+\item Operaci posunu.
+\item Rozpoznání konce vstupu.
+\end{enumerate}
+V~na¹em pøípadì pøicházejí v~úvahu dvì reprezentace vyhovující takovým
+podmínkám. První z~nich je prologovský seznam a~druhou soubor.
+
+Asi nejpøirozenìj¹í datovou strukturou jazyka Prolog, umo¾òující vý¹e
+uvedené operace, je øetìzec. Jak známo, prologovským øetìzcem se
+rozumí posloupnost znakù, které jsou reprezentovány jako seznam
+èíselných hodnot ASCII.
+
+Získání první polo¾ky vstupu odpovídá získání hodnoty v~hlavì seznamu.
+Posun umo¾òují operace nad tìlem seznamu a~prázdný seznam znaèí konec
+vstupu.
+
+Jak bylo uvedeno, dal¹í vhodnou reprezentací je soubor. Získání
+první polo¾ky je mo¾né pomocí jejího naètení, posun lze provést
+operací \emph{seek} a~rozpoznání konce vstupního textu odpovídá konci
+souboru.
+
+Architektura knihovny kombinátorù parserù umo¾òuje jak práci se
+soubory, tak s~prologovskými øetìzci. Pou¾ití souborù se budeme vìnovat
+v~kapitole \ref{ModyParseru}. Pøi poèáteèním seznámení bude pro svou
+názornost vhodnìj¹í forma prologovského øetìzce. 
+
+Vstupní text ve formì prologovského øetìzce bude ukládán do 
+struktury \verb+s/1+, aby bylo mo¾né od sebe vzájemnì odli¹it jednotlivé 
+reprezentace.
+
+A~nyní ji¾ pøistupme k~samotnému návrhu rozhraní parserù. Realizací
+triviálního akceptoru by mohl být predikát s~jediným argumentem
+\verb|Input|, který by obsahoval právì vstupní text. Predikát by uspìl,
+pokud by se rozklad podaøil a~v~opaèném pøípadì by selhal. Od parseru
+se v¹ak oèekává více. Chceme, aby výsledek provedené analýzy vydal ve
+formì vhodné datové struktury, jakou je napøíklad syntaktický èi
+derivaèní strom. Pro tento úèel poslou¾í výstupní argument
+\verb|Result|. Pou¾ití právì navr¾eného rozhraní:
+\begin{quote}\begin{math}
+parser(+Input, -Result)
+\end{math}\end{quote}
+ukazuje následující pøíklad:
+\begin{quote}\begin{verbatim}
+?- parseDigit(s("111th"), Result).
+Result = 1
+Yes
+\end{verbatim}\end{quote}
+Z~pøíkladu je vidìt závada takového návrhu. Byl by toti¾ pou¾itelný
+pouze pro parsery zpracovávající celý vstup. Aby bylo mo¾né pokraèovat
+v~rozkladu, musíme mít pøístup ke~zbytku vstupního øetìzce, který se
+nepodaøilo parseru zpracovat. Jedinì tak umo¾níme, aby parsery na sebe 
+mohly navazovat. Nezavedeme v¹ak do predikátu dal¹í argument, ale
+spojíme nezpracovaný zbytek pomocí operátoru \verb|>/2| s~výsledkem 
+a~vytvoøíme tak term. Pro term
+\verb|NotParsedRest>Result| bude v~následujícím textu pou¾íván termín
+\emph{derivace}. Takovou derivací je term \verb|"37">1| z~následujícího
+pøíkladu:
+\begin{quote}\begin{verbatim}
+?- parseDigit(s("137"), D).
+D = s("37")>1
+Yes
+\end{verbatim}\end{quote}
+Parsery tohoto typu by nám postaèovaly pouze v~pøípadech, kdy je mo¾né
+provést rozklad právì jedním zpùsobem --- napøíklad pøi analýze
+deterministických jazykù. V~centru na¹eho zájmu v¹ak budou jazyky~s
+nejednoznaènì definovanými sentencemi --- slovy jazyka, pro které
+existuje více rùzných derivací charakterizovaných
+odpovídajícím poètem rùzných derivaèních stromù. Parser by tedy mìl
+nìjakým zpùsobem pøedat na výstup v¹echny takové derivace. V~úvahu
+pøicházejí dvì mo¾nosti. První z~nich je pou¾ití mechanismu navracení,
+který je základním a~velmi mocným prostøedkem jazyka Prolog. V~na¹em
+pøípadì je v¹ak výhodnìj¹í shromá¾dit v¹echna øe¹ení rozkladu v~jedné
+datové struktuøe. Ve svìtì funkcionálního programování je zvykem
+takovou explicitní datovou strukturu nazývat \uv{list of successes}
+--- tedy seznam úspì¹ných rozkladù. V~dal¹ím textu pro nìj budeme
+pou¾ívat zkratku LOS\label{LOS}. Seznam úspì¹ných rozkladù lze
+schematicky znázornit následovnì:
+\begin{quote}\begin{math}
+[Rest_{1}>Result_{1}, \dots, Rest_{n}>Result_{n}]
+\end{math}\end{quote}
+kde $Rest_{i}$ je nezpracovaný zbytek vstupu a~$Result_{i}$ výsledek
+rozkladu.
+Pou¾ití si uka¾me na pøíkladu parseru, který pøijímá pøirozená èísla:
+\begin{quote}\begin{verbatim}
+?- parseNatural(s("76th"), LOS).
+LOS = [s("th") > 76,  s("6th") > 7]
+Yes
+\end{verbatim}\end{quote}
+V~ukázce existují dva správné rozklady, které mohou být obecnì vydány
+v~rùzném poøadí. 
+Aby jsme se vyhnuli nejednoznaènostem, zavedeme konvenci, ve které
+se øe¹ení øadí ve struktuøe LOS podle toho, jakou èást vstupního
+textu byla zpracována. Maximální derivace
+se tedy zpravidla nachází v~hlavì seznamu úspì¹ných rozkladù.
+
+Je¹tì stále v¹ak není dùvod ke spokojenosti. V~následujícím textu se
+uká¾e, ¾e je nevýhodné pou¾ívat jeden argument pro vstupní text a~druhý pro seznam úspì¹ných rozkladù. Proto opìt vytvoøíme z~obou argumentù term ---
+tentokrát operátorem \verb|+/2|. Nejen¾e spojení dvou argumentù v~jeden 
+term u¹etøí práci pøi psaní slo¾itìj¹ích parserù, ale pøedev¹ím
+umo¾ní zefektivnit práci knihovních predikátù:
+\begin{quote}\begin{math}
+parser(+Input + -LOS)
+\end{math}\end{quote}
+Nyní ji¾ pøistupme k~poslednímu, av¹ak neménì dùle¾itému bodu návrhu
+rozhraní, kterým je umo¾nìní parametrizace vytváøených parserù. Pro
+tento úèel zvolme konvenci ve které argumenty parametrizující
+daný parser pøedcházejí vstupnì/\-výstupnímu termu $Input+LOS$:\index{parsery!rozhraní}
+\begin{quote}\begin{math}
+parser(+Arg_{1}, ..., +Arg_{n}, +Input + -LOS)
+\end{math}\end{quote}
+
+\vskip 3mm
+
+Tímto posledním krokem jsme dokonèili návrh rozhraní parserù. Døíve
+ne¾ se pustíme do vytváøení konkrétních parserù poznamenávám, ¾e
+pro zvý¹ení èitelnosti je navíc ve zdrojových textech pro názvy promìnných 
+pou¾ívána následující konvence:
+
+\hskip 5mm
+\vbox{
+\begin{tabbing}
+xxxxx \= xxxxxxxxxxxxxxxxxxx \kill
+$P$ 
+ \>\dots promìnná obsahující parser (Parser).\\
+$I$ 
+ \>\dots vstupní text (Input).\\
+$L$ 
+ \>\dots seznam úspì¹ných rozkladù (LOS).\\
+$W$ 
+ \>\dots promìnná obsahující term $I+L$ (Wrapper).\\
+$N$ 
+ \>\dots zbytek vstupu, který nebyl parserem zpracován (NotParsed).\\
+$R$ 
+ \>\dots výsledek rozkladu (Result).\\
+\end{tabbing}
+}
+
+\endinput
+-------------------------------------------------------------------------------
+... konvence obsa¾ená v~pøíloze \ref{Legenda}.

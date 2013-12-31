@@ -1,0 +1,18 @@
+./
+ 	Text diplomove prace - zdrojove soubory pro CsLaTeX.
+
+Makefile
+	Soubor pro make:
+        make dvi
+        	... vygeneruje dvi soubor
+        make ps
+        	... vygeneruje Postcript verzi
+        make html
+        	... vygeneruje HTML verzi textu
+	make all
+        	... dvi, ps a html verze textu
+                
+/pc/src/auxiliary/XchgEncBody
+	Script pro dodatecne transformace HTML souboru.
+
+-EOF-

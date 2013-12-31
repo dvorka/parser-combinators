@@ -1,0 +1,22 @@
+./
+	Vlnka - program pro vkladani znaku tilda do zdrojovych
+        souboru pro LaTeX (zabrani nezadoucimu zalomeni radku).
+
+vlnka.pl
+	Soubor se zdrojovym textem.
+
+go.sh
+  	Zavadec programu.
+
+vlnka.sh
+	Spousteci skript pro SWI Prolog.
+
+vlnka.all.sh
+	Zpracuje vsechny *.tex soubory z adresare tex.in/ do 
+        adresare tex.out/.        
+
+vlnka.master.sh
+	Zpracuje vsechny LaTeXove soubory textu diplomove 
+        prace a ulozi je do adresare tex.out/.
+
+- EOF -

@@ -1,0 +1,92 @@
+%\documentclass[10pt]{report}	% print
+%\documentclass[11pt]{report}   
+\documentclass[12pt]{report}	% final
+
+\usepackage{czech}
+\usepackage{makeidx}
+\usepackage[dvips]{graphicx}
+
+\title{Kombinátory parserù}
+\author{Martin Dvoøák}
+\date{\today \footnote{\LaTeX\ draft}}
+
+\sloppy
+
+% velikos zrcadla ( 2.54cm = 1(in)ch = 72.27pt; 1cm = 28.5pt; 1pt = 65536sp)
+\addtolength{\voffset}{-45pt}
+\addtolength{\topmargin}{17pt}
+\addtolength{\textheight}{45mm}
+
+\addtolength{\hoffset}{-5mm}	% draft: {-1cm}
+\setlength{\marginparwidth}{20mm}
+\setlength{\evensidemargin}{1pt}
+\addtolength{\textwidth}{25mm}
+
+\makeindex
+
+\begin{document}
+
+% *** macros ***
+\global\def\fakesection#1*{\vskip 7mm \noindent \emph{#1} \newline}
+\let\latex=\LaTeX
+% *** macros ***
+
+% *** counters ***
+\newcounter{pcAlgorithm}
+ \setcounter{pcAlgorithm}{1}
+ \def\showPcAlgorithm{\arabic{pcAlgorithm}\addtocounter{pcAlgorithm}{1}}
+% *** counters ***
+
+\iftrue
+ \pagestyle{empty}
+  \input{prelude}
+ \newpage
+  \pagenumbering{roman}
+   \pagestyle{plain}
+    \input{intro}
+     \newpage
+      \tableofcontents
+\newpage
+\pagestyle{headings}
+ \pagenumbering{arabic}
+ \input{hop}
+
+ \input{firstpc}
+ \input{semantic}
+ \input{iterate}
+ \input{optimize}
+ \input{expression}
+ \input{mode}
+ \input{demo}
+  \input{hilex} 
+  \input{prologdoc}
+ \input{summary}
+ \input{conclusion}
+
+ \newpage
+  \input{books}
+
+ \printindex
+ \newpage
+
+ \appendix
+  \pagenumbering{Roman}
+  \input{debug}
+  \input{operator}
+
+\else
+ \input{det}
+\fi
+
+\end{document}
+
+\endinput
+-------------------------------------------------------------------------------
+\input{self}
+\input{technical}
+\input{legend}
+\the\catcode`\@
+
+\setbox0=\hbox{a}
+\the\box0
+\showbox0

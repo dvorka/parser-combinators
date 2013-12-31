@@ -1,0 +1,16 @@
+./
+			On line self application.			
+        	
+	BNF gramatika je prelozena do 'environmentu' - obdoby tabulky. 
+        Pri samotnem rozkladu je potom tato tabulka interpretovana. 
+        Rozklad podle ni provadeji knihovni predikaty.
+
+selfon.pl
+	Zdrojovy soubor prikladu.
+        
+bnf/
+	BNF gramatiky.
+env/
+	Vygenerovane environmenty.
+
+- EOF -

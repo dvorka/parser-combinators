@@ -1,0 +1,125 @@
+#! /bin/bash
+
+#------------------------------------------------------------------------------
+#
+#                               Recursive DCC		  
+#
+#				Martin Dvorak
+#                                   1999
+#
+#------------------------------------------------------------------------------
+# Rem:
+#     This script calls dcc with specified options on all files which 
+# fits to wildcards
+
+# path to the script
+export SCRIPTNEST=rdcc
+
+if [ ${#} -eq 0 ]
+then
+ echo ""
+ echo "Recursive DCC - Dvorka's convert utility (stub to dcc)"
+ echo "Usage: rdcc <option> <wildcard> <dccoptions>"
+ echo " Options:"
+ echo "  -a ... only files in actuall directory" 
+ echo "  -r ... files in actuall directory and all it's subdirectories" 
+ echo ""
+ echo " Wildcard:"
+ echo "  only files which fits this wildcard are processed. Always enclose"
+ echo "  wildcard into \""
+ echo ""
+ echo " DCCoptions:"
+ dcc 
+ echo ""
+ echo ""
+ echo " Examples:"
+ echo " rdcc -r \"*.html\" -wi"
+ echo "  ... converts all HTML files in subdirs from Win-1250 to iso88529-2."
+ echo "      File *.html is converted and saved under *the same name*!"
+ echo "Bye!"
+ exit 0
+fi
+
+case ${#} in 		# check number of parameters
+	1 | 2)          
+              echo "Error: too few parameters (${#})..."
+              exit 0
+              ;;
+	3)
+              if [ ${1} = "-a" -o \
+                   ${1} = "-r"    \
+                 ]
+               then
+                echo "rdcc parameters OK..."
+	       else
+                echo "Error: bad rdcc parameter ${1} (must be -a or -r)..."  
+	        echo "Bye!"    
+		exit 0
+              fi
+              ;;
+	*)
+              echo "Error: too many parameters (${#}):"
+              echo "${*}"
+              echo "Bye!"
+              exit 0
+              ;;
+esac
+
+
+
+case ${1} in
+	-a) # actuall directory
+              echo "Processing actuall directory:"
+
+              ls ${2} | while read FILE
+               do
+
+  		if [ -f ${FILE} ]
+   		then
+                 # echo ${FILE}
+                 dcc ${3} ${FILE} ${FILE}
+                else
+                 echo " ${FILE} is directory..."
+                fi
+
+               done
+              ;;
+
+	-r) # recursive    
+
+	      # dive 
+	      for FILE in *
+	       do
+  		if [ -d ${FILE} ] # ignore files for now (are done by ls later)
+   		then
+
+      		 echo ">>> ${FILE}"
+      		  cd ${FILE}
+       		   ${SCRIPTNEST} -r "${2}" ${3}
+      		  cd ..
+      		 echo "<<< ${FILE}"
+                  
+                fi
+              done
+
+	      # actuall directory	
+              ls ${2} | while read FILE
+               do
+
+  		if [ -f ${FILE} ]
+   		then
+                 # echo ${FILE}
+                 dcc ${3} ${FILE} ${FILE}
+                else
+                 echo " ${FILE} is directory..."
+                fi
+
+               done
+              ;;
+
+        *)    echo "Unknown script parameter: ${1}"
+              ;;
+esac
+
+echo "Bye!"
+exit 0

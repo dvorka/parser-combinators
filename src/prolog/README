@@ -1,0 +1,46 @@
+demo/
+	Ukazkove programy.
+
+doc/
+	Zdrojovy kod z textu prace. Jednotlive casti musi byt konzultovany 
+	pomoci ./doc*.pl.
+
+pc/
+	Kombinatory parseru.
+
+specific/
+	Verze predikatu pro ruzne implementace jazyka Prolog.
+
+support/
+	Sada pomocnych predikatu.
+
+tools/
+	Programy pouzite pri vytvareni knihovny.
+
+go.sh
+	Script spoustejici interpret Prologu a zavadejici knihovnou PC.
+
+docI.pl
+	Zavadec kodu z textu prace - 1.cast.
+docII.pl
+	Zavadec kodu z textu prace - 2.cast.
+docIII.pl
+	Zavadec kodu z textu prace - 3.cast.
+
+loadBP.pl
+	BinProlog: zavadec knihovny z tohoto adresare.
+
+loadBP-1.pl
+        BinProlog: zavadec knihovny z adresare o uroven nize.
+
+loadBP-2.pl
+        BinProlog: zavadec knihovny z adresare o dve urovne nize (vyuzivan 
+        napriklad ukazkami z demo/*/).
+
+loadSWI.pl
+	SWI Prolog: zavadec knihovny pro SWI Prolog.
+
+docI.sh docII.sh docIII.sh
+	SWI Prolog: zavadece docI.pl, docII.pl, docIII.pl
+
+-EOF-

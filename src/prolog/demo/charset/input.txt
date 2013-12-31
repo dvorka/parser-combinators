@@ -1,0 +1,1 @@
+Jednoduchá ukázka pou¾ití módu 'encode' na pøíkladu pøekódovávání znakových sad.

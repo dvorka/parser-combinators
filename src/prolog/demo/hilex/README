@@ -1,0 +1,34 @@
+./
+	Hilex - program prevadejici zdrojove kody do HTML se syntax
+        highlightingem.
+
+hlx/
+	Konfiguracni soubory pro jednotlive programovaci jazyky.
+
+coc/
+	Vygenerovane zapouzdrovace z *.hlx souboru.
+
+inputs/
+	Priklady vstupnich souboru.
+
+examples/
+	Vysledky zpracovani souboru z inputs/.
+
+hilex.pl
+	Soubor se zdrojovym textem.
+
+hilex.sh
+	Spousteci skript pro SWI Prolog.
+        
+go.sh
+	Zavadec programu.
+
+
+Dokumentace
+-----------
+/pc/doc/html/hilex
+	HTML dokumentace programu Hilex vygenerovana pomoci PrologDoc.
+/pc/doc/tex/hilex
+	CsLaTeXova verze dokumentace.
+
+- EOF -

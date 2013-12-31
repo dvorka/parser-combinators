@@ -1,0 +1,229 @@
+\section{PrologDoc}\label{PrologDoc}\index{PrologDoc}
+\emph{PrologDoc} je nástroj urèený pro generování dokumentace
+programù, pøípadnì i~jednotlivých zdrojových souborù jazyka
+Prolog, ve formátu HTML a~\LaTeX .
+
+\subsection{U¾ivatelská dokumentace}
+Dokumentace, kterou \emph{PrologDoc} vytváøí, popisuje jednotlivé
+zdrojové soubory a~predikáty programu, dále obsahuje rejstøík
+v¹ech definovaných operátorù, souborù a~predikátù, které byly
+popsány prostøednictvím dokumentaèních komentáøù, jejich¾ strukturu
+si popí¹eme v~následující èásti.
+
+\subsubsection*{Dokumentaèní komentáø}
+Dokumentaèní komentáø je komentáø jazyka Prolog zaèínající tokenem
+\verb+'/** '+ a~konèící tokenem \verb+'*/'+. Je rozdìlen na sekce.
+
+\vskip 3mm
+\subsubsection*{Sekce}\vskip -3mm
+Sekci otevírá klíèové slovo, které zaèíná na nové øádce a~nesmí mu
+pøedcházet prázdný znak. V¹echny øádky zaèínající prázdným znakem
+jsou souèástí naposledy otevøené sekce. Konkrétní klíèová slova
+identifikují typ sekce.
+
+\vskip 3mm
+\subsubsection*{Dokumentaèní komentáø souboru}\vskip -3mm
+Za otevíracím tokenem následuje klíèové slovo \verb+Module+. To
+mù¾e být volitelnì doplnìno názvem modulu. Název modulu je
+platný a¾ do konce øádku. Komentáø mù¾e obsahovat sekce
+\verb+Text+, \verb+Ver+ a~\verb+Author+. Kterákoli ze sekcí mù¾e být
+vynechána.
+\begin{quote}
+ \begin{tabular}{ll}
+  Sekce \verb+Text+   & je urèena pro detailní popis modulu.\\
+  Sekce \verb+Ver+    & definuje verzi souboru.\\
+  Sekce \verb+Author+ & obsahuje autory souboru.
+ \end{tabular}
+\end{quote}
+Dokumentaèní komentáø souboru mù¾e vypadat napøíklad takto:
+\begin{quote}\begin{verbatim}
+/** Module: Set tools
+Text:   Predikáty pro práci s mno¾inami.
+Ver:    v1.31, 27. kvìten 1998
+Author: Martin Dvoøák, Andy Kaufman
+*/
+\end{verbatim}\end{quote}
+
+\vskip 3mm
+\subsubsection*{Dokumentaèní komentáø predikátu}\vskip -3mm
+Za otevíracím tokenem komentáøe následuje a¾ po konec øádku
+signatura predikátu. Signatura se skládá z~funktoru a~v~pøípadì,
+¾e je arita predikátu vìt¹í ne¾ 0, rovnì¾ z~uzávorkovaného
+seznamu názvù parametrù oddìlených èárkami. Argumenty musejí
+být jména promìnných platná v~jazyce Prolog, kterým musí
+pøedcházet jeden ze znakù \verb='+'=, \verb='-'= nebo \verb='?'= dle
+módu, ve kterém se nacházejí:
+\begin{quote}
+\begin{tabbing}
+xxxxx \= xxxxxxxxxxxxxxxxxxx \kill
+$+$
+ \>\dots vstupní parametr\\     		% promìnná musí být vázána
+$-$
+ \>\dots výstupní parametr\\                    % promìnná musí být volná
+$?$
+ \>\dots vstupnì výstupní parametr\\            % na vazbì promìnné nezále¾í
+\end{tabbing}
+\end{quote}
+Signatura není ukonèena teèkou, ale oddìlovaèem nového øádku.
+Komentáø mù¾e obsahovat sekce \verb+Text+, \verb+Arg+, \verb+Example+. 
+\begin{quote}
+ Sekce \verb+Text+ je urèena pro detailní popis predikátu. Uvnitø
+ sekce text mohou být øádky formátovány pomocí následujících
+ znakù na jejich poèátku:
+ \begin{quote}
+ \verb+p+\quad \dots \quad nový odstavec.\\ 
+ \verb+v+\quad \dots \quad prostøedí verbatim (\LaTeX) resp. \verb|<pre>| (HTML). 
+ Pokud za sebou takto formátované øádky následují jsou spojeny
+ \end{quote}
+ Sekce \verb+Arg+: za klíèovým slovem je uvedeno jméno argumentu
+ ze signatury predikátu. Následují øádky s~detailním
+ popisem predikátu.\\
+ Sekce \verb+Example+: øádek s~klíèovým slovem zùstává prázdný. Sekce
+ pokraèuje výpisem pøíkladu. Obsah této sekce je uzavøen
+ v~prostøedí verbatim (\LaTeX) resp. \verb|<pre>| (HTML).
+\end{quote}
+
+\vskip 1mm
+\noindent
+Uka¾me si nakonec pøíklad dokumentaèního komentáøe predikátu:
+\begin{quote}\begin{verbatim}
+/** 	expression(+Operators, +Evaluator, ?Wrapper)
+Text:   Parser výrazù obsahujících unární i binární operátory 
+        s libovolným poètem priorit. 
+p       Z u¾ivatelského zápisu je vygenerován parser, který je         
+        následnì pou¾it pro rozklad vstupního textu. Dále je 
+        pro zpracování v dobì rozkladu specifikován 
+        vyhodnocovaè.
+Arg:    Operators:
+        Výèet pøípustných operátorù je seznam seznamù definic 
+        jednotlivých operátorù. Definice jednoho operátoru je 
+        ulo¾ena  ve struktuøe, její¾ funktor udává typ
+        asociativity (xf, yf, fx, fy, xfx, xfy, yfx, yfy),
+        první argument je token ve vstupním textu a druhý
+        parametr funktor fce, která se má pou¾ít pøi
+        vyhodnocování. Definice operátorù o stejné precedenci
+        jsou sdru¾eny v jednom seznamu. Seznamy operátorù
+        o stejné precedenci jsou koneènì ulo¾eny v celkovém
+        výètu,  zde jsou seøazeny od nejvy¹¹í precedence
+        k nejni¾¹í.
+p       Napøíklad:
+v               [[yfx("+",'+'),yfx("-",'-')],
+v                [yfx("*",'*'),yfx("/",'/'),yfx("//",'//')],
+v                [fx("!",'!')]]
+Arg:    Evaluator
+        Jméno predikátu, který má provádìt vyhodnocování.
+Example:
+        ?- expression([[yfx("+",'+'),yfx("-",'-')],
+        |              [yfx("*",'*'),yfx("/",'/')],
+        |              [xfy("^",'^')]],
+        |              arieval,
+        |              quickS("3^2^2+2*3^6-7/8*9")+L).
+*/
+\end{verbatim}\end{quote}
+a~jak bude vysázen v~rámci \LaTeX ové dokumentace:
+\begin{quote} % PrologDoc
+\noindent
+\label{3}
+\verb|expression/3 |\hrulefill \verb| expression(+Operators,+Evaluator,?Wrapper)|
+
+\vskip -2mm\noindent\begin{quote}Parser výrazù obsahujících unární i~binární operátory 
+s~libovolným poètem priorit. 
+
+
+Z~u¾ivatelského zápisu je vygenerován parser, který je         
+ následnì pou¾it pro rozklad vstupního textu. Dále je 
+ pro zpracování v~dobì rozkladu specifikován 
+ vyhodnocovaè.
+\end{quote}\vskip -3mm\noindent\begin{description}
+
+\item {\it Operators:}
+ Výèet pøípustných operátorù je seznam seznamù definic 
+ jednotlivých operátorù. Definice jednoho operátoru je 
+ ulo¾ena  ve struktuøe, její¾ funktor udává typ
+ asociativity (xf, yf, fx, fy, xfx, xfy, yfx, yfy),
+ první argument je token ve vstupním textu a~druhý
+ parametr funktor fce, která se má pou¾ít pøi
+ vyhodnocování. Definice operátorù o~stejné precedenci
+ jsou sdru¾eny v~jednom seznamu. Seznamy operátorù
+ o~stejné precedenci jsou koneènì ulo¾eny v~celkovém
+ výètu,  zde jsou seøazeny od nejvy¹¹í precedence
+ k~nejni¾¹í.
+
+
+Napøíklad:
+\begin{verbatim}[[yfx("+",'+'),yfx("-",'-')],
+[yfx("*",'*'),yfx("/",'/'),yfx("//",'//')],
+[fx("!",'!')]]
+\end{verbatim}
+
+\item {\it Evaluator:}
+ Jméno predikátu, který má provádìt vyhodnocování.
+
+\item {\it Pøíklad:}\vskip -3mm
+\vbox{\begin{verbatim}
+ ?- expression([[yfx("+",'+'),yfx("-",'-')],
+ |              [yfx("*",'*'),yfx("/",'/')],
+ |              [xfy("^",'^')]],
+ |              arieval,
+ |              quickS("3^2^2+2*3^6-7/8*9")+L).\end{verbatim}}
+\item \end{description}
+\end{quote} % PrologDoc
+
+\subsubsection*{Predikáty}\vskip -2mm
+Program lze konfigurovat pomocí voleb ve struktuøe \verb+pdOptionIs/2+.
+Bìhovou nápovìdu poskytuje predikát \verb+prologDoc/0+. Vstupním bodem 
+programu je predikát \verb|prologDoc/3|:
+\begin{quote}
+$prologDoc(+DocFormat, +Recursive, +SourceFile)$
+\end{quote}
+který vygeneruje dokumentaci programu, pøípadnì jednotlivého zdrojového
+souboru, poèínaje souborem $SourceFile$. Parametr $Recursive$ urèuje
+zpùsob generování. Pokud je vázán na atom \verb+'follow'+, 
+je dokumentace generována rekurzivnì pro soubory vnoøené pomocí 
+direktiv~--- napøíklad \verb+':- ['src.pl']'+. Vazba na atom
+\verb+'single'+ urèuje, ¾e má být vytvoøena pouze dokumentace
+jednotlivého souboru $SourceFile$.
+
+A~koneènì v~parametru $DocFormat$, jen¾ mù¾e být vázán na atomy \verb+'html'+
+nebo \verb+'latex'+, se specifikuje formát generované dokumentace.
+
+
+
+\subsection{Implementace}
+Generování dokumentace, které \emph{PrologDoc} provádí,
+lze rozdìlit na dvì podúlohy:
+\begin{enumerate}
+\item Získání potøebných dat analýzou dokumentaèních komentáøù
+ve zdrojových souborech.
+\item Generování dokumentace samotné.
+\end{enumerate}
+
+\vskip 3mm
+\subsubsection*{Analýza zdrojových souborù}\vskip -3mm
+Parser analyzuje zdrojový soubor, který mù¾e být pøijímán buï
+ze souboru nebo zavedením do pamìti a~pou¾itím módu \verb+s/1+.
+Ve vstupním textu jsou identifikovány direktivy a~dokumentaèní komentáøe.
+Z~direktiv jsou jednak získávány vnoøené soubory, v~nich¾ se má
+pøi rekurzivním generování s~rozkladem pokraèovat, a~dále jsou zpracovávány
+direktivy definující operátory. Informace o~definovaných operátorech
+se ukládají do struktur, které jsou pozdìji pou¾ity pøi generování
+dokumentace~--- stejnì jako data získaná analýzou dokumentaèních komentáøù.
+
+\vskip 3mm
+\subsubsection*{Generování dokumentace}\vskip -3mm
+Pøi generování dokumentace jsou data z~pøipravených struktur pøevedena
+do po¾adovaného formátu a~to buï predikátem \verb+generateHtmlDoc/1+ 
+nebo \verb+generateLatexDoc/1+. 
+
+V~pøípadì HTML dokumentace je celý dokument propojován pomocí kotev
+a~linkù, aby bylo mo¾né rychlé vyhledávání souborù a~predikátù
+podle rejstøíkù. V~\LaTeX\quad dokumentaci jsou tyto nahrazeny 
+referencemi~--- tato mo¾nost je zde volitelná. Zdrojový text pro
+~\LaTeX\quad je navíc o¹etøen programem \emph{vlnka}, který vlo¾ením
+\emph{tild} zabrání nesprávnému zalamování øádkù.
+
+Pro syntax higlighting pøíkladù se pou¾ívá \emph{HiLex}, jeho¾ kód
+je zavádìn spoleènì s~programem \emph{PrologDoc}.
+
+\endinput
+-------------------------------------------------------------------------------

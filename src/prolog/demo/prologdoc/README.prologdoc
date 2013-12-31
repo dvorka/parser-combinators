@@ -1,0 +1,104 @@
+
+                                PrologDoc
+
+        Program urceny pro generovani dokumentace pro programy napsane
+v jazyce Prolog.
+        Zdrojovy kod se doplni o komentare ve specialnim formatu, ktere
+obsahuji popis souboru, predikatu, operatoru atd. Pomoci programu PrologDoc
+je potom ze zdrojovych souboru vygenerovana dokumentace a to bud ve
+formatu HTML nebo ve forme zdrojovych souboru pro LaTeX.
+
+
+
+* PrologDoc komentar
+        Vsechny informace, ktere jsou urceny pro PrologDoc, jsou uzavreny
+v komentari nasledujiciho formatu:
+                /**
+                    ...
+                        */
+Tedy komentar, ktery otevira token '/**' nasledovany prazdnym znakem a
+uzavira token '*/'.
+
+
+
+* Sekce
+        PrologDoc komentar je rozdelen na sekce. Sekci otevira klicove
+slovo, ktere zacina na nove radce a nesmi mu predchazet prazdny znak. 
+Vsechny radky, ktere zacinaji prazdnym znakem, jsou soucasti naposledy 
+otevrene sekce. Konkretni klicova slova identifikujici jednotlive sekce 
+a jejich format bude definovan v nasledujicich odstavcich.
+
+
+
+* Dokumentace souboru
+        Za oteviracim tokenem '/**' nasleduje klicove slovo 'Module'.
+To muze byt volitelne doplneno jmenem modulu. Jmeno modulu je platne az
+po konec radku. PrologDoc komentar muze obsahovat sekce Text, Ver
+a Author. Kterakoli ze sekci muze byt vynechana.
+
+** Sekce Text
+        Sekce pro detailnejsi popis modulu.
+** Sekce Ver
+        Definuje verzi souboru. Muze obsahovat datum, verzi apod. v libovolnem
+        formatu.
+** Sekce Author
+        Autori souboru.
+        
+Dokumentace souboru muze vypadat kuprikladu takto:
+
+/** Module: Set tools
+Text:  Predikaty pro praci s mnozinami.
+
+Ver: 	v1.31, 27. kveten 1998
+
+Author: Martin Dvorak, Andy Kaufman
+*/
+
+
+
+* Dokumentace predikatu
+        Za oteviracim tokenem '/** ' nasleduje az po konec radku signatura
+predikatu. Signatura se sklada z funktoru a v pripade, ze je arita predikatu
+vetsi nez 0, rovnez z uzavorkovaneho seznamu nazvu argumentu oddelenych carkami.
+Argumenty museji byt jmena promennych platna v jazyce Prolog, kterym musi
+predchazet jeden ze znaku +, -, ? dle modu ve kterem se pouzivaji.
+Vstupni argument je uvozen znakem +, vystupni - a vstupne vystupni ?.
+Signatura neni ukoncena teckou, ale oddelovacem noveho radku.
+
+        Komentar muze obsahovat sekce Text, Arg, Example
+
+** Sekce Text
+        Sekce pro detailni popis predikatu. V teto sekci mohou byt pocatky 
+        radku formatovany pomoci nasledujicich znaku:
+        	p ... novy odstavec
+        	v ... verbatim prostredi (nasleduji-li radky za sebou jsou 
+                      spojeny)	        	  
+** Sekce Arg
+        Za klicovym slovem je uvedeno jmeno argumentu ze signatury. Na
+        nasledujich radcich je detailni popis predikatu.
+** Sekce Example
+        Radek s klicovym slovem zustava prazdny. Sekce pokracuje vypisem
+        prikladu. Obsah teto sekce je uzavren v prostredi verbatim (tex)
+        resp. pre (HTML).
+
+Dokumentace predikatu muze vypadat kuprikladu takto:
+
+/**     <*@>(?Wrapper, +Parser, -BottomFun )
+Text:   Mutator, ktery vytvori parser akceptujici 0 nebo vice iteraci
+        parseru puvodniho. Mutant provadi vnitrne castecne vyhodnoceni tak,
+        ze vysledna struktura LOS je z casti oriznuta - obsahuje pouze
+        maximalni reseni.
+p       Tato varianta mutatoru <*@> sice neni tak pametove usporna
+        jako <<*@>>/2, ale je casove efektivnejsi.
+Arg: Bottom
+        Terminator, ktery vytvari zaklad struktury LOS.
+Arg: Fun
+        Predikat transformujici strukturu LOS po kazde iteraci.
+Example:
+        ?- chailL("1+2+3"+L :-> digit,symbol("+")).
+        L=[1,2,3]
+        yes
+*/
+
+- EOF -
+        

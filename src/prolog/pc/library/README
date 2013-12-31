@@ -1,0 +1,120 @@
+./
+	Knihovna kombinatoru parseru
+
+debugger/
+	Metainterpret pro ladeni kombinatoru parseru a predikaty pro 
+        profiling.
+
+adhoc.pl
+	Vseobecne pouzitelne konstruktory parseru a utility.
+        
+auxiliary.pl
+	Pomocne predikaty, binarni vyhledavaci stromy.
+	
+colone.pl
+	Predikaty vhodne pro pouziti v kolonach - semanticke
+        akce a podminky v mutatorech <@ a <?.
+        
+combine.pl
+	Kombinatory parseru jsou predikaty vyssiho radu, ktere z jednoho
+        nebo vice parseru vytvareji parser novy.
+
+combineI.pl
+	Kombinatory parseru I.
+
+combineII.pl
+	Kombinatory parseru II.
+
+datatype.pl
+	Parsery beznych datovych typu.
+
+debug.pl
+	Predikaty jadra ladiciho systemu knihovny.
+
+error.pl
+	Predikaty pro report a osetreni chyb.
+        
+expr.pl
+	Parser vyrazu s libovolnym poctem urovni precedence operatoru
+        typu: xf, fx, yf, fy, xfx, xfy, yfx a yfy.
+
+fun.pl
+	Aplikace programovani vyssiho radu ze sveta funkcionalniho
+        programovani.
+	
+generator.pl
+	Generatory parseru.
+	
+idf.pl
+	Identifikatory.
+
+impera.pl
+	Bezne obraty strukturovaneho programovani imperativnich
+        a funkcionalnich programovacich jazyku.
+
+invoke.pl
+	Predikaty urcene k vyvolavani parseru v ruznych rezimech. 
+        Podrobnosti viz mode.pl.
+        
+
+is.pl
+	Klasifikace termu.
+
+junk.pl
+	Obsolete...
+        
+mode.pl
+	Mody parseru - klicove predikaty a popis.
+
+modeaux.pl
+	Pomocne predikaty pro mody parseru.
+
+mutate.pl
+	Mutatory parseru.
+        
+mutateFail.pl
+	Repeat-fail mutator.
+
+mutateI.pl
+	Mutatory parseru I.
+
+mutateOff.pl
+	Mutatory parseru s vazenim derivaci.
+
+mutatePart.pl
+	Mutatory parseru vyuzivajici zkraceneho vyhodnocovani v
+        kombinatorech <: a :>.
+
+mutateTrim.pl
+	Iteratory orezavajici seznam uspesnych rozkladu mutatorem <>.
+
+operator.pl
+	Definice operatoru pouzitych v knihovne kombinatoru parseru.
+
+optimize.pl
+	Optimalizace parseru na urovni zakladnich konstruktoru parseru
+        a pomocne predikaty pro konstrukci rozkladovych tabulek modu
+        ll1 a pseudoll1.
+	
+smart.pl
+	Verze kombinatoru a mutatoru umoznujici vyuziti operatorove 
+        notace pro zefektivneni vypoctu.
+	
+terminal.pl
+	Zakladni primitiva a parsery terminalnich symbolu.
+	
+terminalI.pl
+	Parsery terminalnich symbolu I.
+	
+tester.pl
+	Pomocne predikaty pro testovani a profiling jednotlivych casti 
+        knihovny.
+
+to.pl
+	Konverze termu.
+
+tuple.pl
+	Predikaty pro praci s n-ticemi. 
+        
+-EOF-
+        

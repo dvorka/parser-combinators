@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HTML using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT="#FFFF00" BGCOLOR="#000080">
+
+<PRE>
+<FONT FACE="COURIER NEW, ARIAL" SIZE="+0">
+<FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>%
+</I></FONT><FONT COLOR="#00FF00"><I>%                               Benchmark I:
+</I></FONT><FONT COLOR="#00FF00"><I>%
+</I></FONT><FONT COLOR="#00FF00"><I>%                               List version
+</I></FONT><FONT COLOR="#00FF00"><I>%
+</I></FONT><FONT COLOR="#00FF00"><I>%           Convert Unix files to DOS (0xA -&gt; 0xD 0xA) a vice versa
+</I></FONT><FONT COLOR="#00FF00"><I>%
+</I></FONT><FONT COLOR="#00FF00"><I>%                               Martin Dvorak
+</I></FONT><FONT COLOR="#00FF00"><I>%                                   1999
+</I></FONT><FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>% Init &amp; libraries
+</I></FONT>
+<FONT COLOR="#00FF00"><I>% SWI Prolog
+</I></FONT> <FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT> <FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">'../../loadSWI'</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">.</FONT>
+<FONT COLOR="#00FF00"><I>% BinProlog
+</I></FONT> <FONT COLOR="#00FF00"><I>%:- ['../../loadBP-2'].
+</I></FONT>
+<FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT>
+go<FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+        unix2Dos<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">'input1'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">'output11'</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+goo<FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+        dos2Unix<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">'output11'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">'output12'</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+
+gol<FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+        unix2Dos<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">'input2'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">'output21'</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+gool<FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+        dos2Unix<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">'output21'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">'output22'</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+
+<FONT COLOR="#00FF00"><I>%- code -----------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>% unix2dos(+UnixFileName, -DosFileName)
+</I></FONT><FONT COLOR="#00FF00"><I>% must be:
+</I></FONT><FONT COLOR="#00FF00"><I>%       ?- UnixFileName \= DosFileName.
+</I></FONT><FONT COLOR="#00FF00"><I>%       Yes
+</I></FONT>
+unix2Dos<FONT COLOR="#FFFFFF">(</FONT>UnixFileName<FONT COLOR="#FFFFFF">,</FONT> DosFileName<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+                printf<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">'Unix2Dos: '</FONT><FONT COLOR="#FFFFFF">,</FONT>UnixFileName<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">' -&gt; '</FONT><FONT COLOR="#FFFFFF">,</FONT>DosFileName<FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>
+        loadFile<FONT COLOR="#FFFFFF">(</FONT>UnixFileName<FONT COLOR="#FFFFFF">,</FONT> UnixBuffer<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>    <FONT COLOR="#00FF00"><I>% input file into buffer
+</I></FONT>        openFile<FONT COLOR="#FFFFFF">(</FONT>DosFileName<FONT COLOR="#FFFFFF">,</FONT>Old<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>write</B></FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>       <FONT COLOR="#00FF00"><I>% redirect output to file
+</I></FONT>         unix2DosFilter<FONT COLOR="#FFFFFF">(</FONT>UnixBuffer<FONT COLOR="#FFFFFF">+</FONT>_<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>
+        closeFile<FONT COLOR="#FFFFFF">(</FONT>Old<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>write</B></FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>                  <FONT COLOR="#00FF00"><I>% close output file
+</I></FONT>                printf<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">'... Bye!'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>nl</B></FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+
+<FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>% unix2DosFilter(?Wrapper)
+</I></FONT><FONT COLOR="#00FF00"><I>% - conversion: 0xA -&gt; 0xD 0xA
+</I></FONT>
+unix2DosFilter<FONT COLOR="#FFFFFF">(</FONT>W<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+ W <FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT><FONT COLOR="#FFFFFF">&gt;</FONT>
+       <FONT COLOR="#FFFFFF">(</FONT>
+        nonSymbol<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">10</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT> <FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">@</FONT> showAtom
+         <FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">:</FONT>
+        symbol<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">10</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT> <FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">@</FONT> const<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">13</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">10</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT> <FONT COLOR="#FFFFFF">=</FONT><FONT COLOR="#FFFFFF">&gt;</FONT> string2Atom <FONT COLOR="#FFFFFF">=</FONT><FONT COLOR="#FFFFFF">&gt;</FONT> show
+       <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">*</FONT><FONT COLOR="#FFFFFF">&gt;</FONT> <FONT COLOR="#FFFFFF">.</FONT>
+
+<FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>% dos2Unix(+DosFileName, -UnixFileName)
+</I></FONT><FONT COLOR="#00FF00"><I>% must be:
+</I></FONT><FONT COLOR="#00FF00"><I>%       ?- UnixFileName == DosFileName.
+</I></FONT><FONT COLOR="#00FF00"><I>%       No
+</I></FONT>
+dos2Unix<FONT COLOR="#FFFFFF">(</FONT>DosFileName<FONT COLOR="#FFFFFF">,</FONT> UnixFileName<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+                printf<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">'Dos2Unix: '</FONT><FONT COLOR="#FFFFFF">,</FONT>UnixFileName<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#00FFFF">' -&gt; '</FONT><FONT COLOR="#FFFFFF">,</FONT>DosFileName<FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>
+        loadFile<FONT COLOR="#FFFFFF">(</FONT>DosFileName<FONT COLOR="#FFFFFF">,</FONT> DosBuffer<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>       <FONT COLOR="#00FF00"><I>% input file into buffer
+</I></FONT>        openFile<FONT COLOR="#FFFFFF">(</FONT>UnixFileName<FONT COLOR="#FFFFFF">,</FONT>Old<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>write</B></FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>       <FONT COLOR="#00FF00"><I>% redirect output to file
+</I></FONT>         dos2UnixFilter<FONT COLOR="#FFFFFF">(</FONT>DosBuffer<FONT COLOR="#FFFFFF">+</FONT>_<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>
+        closeFile<FONT COLOR="#FFFFFF">(</FONT>Old<FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>write</B></FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">,</FONT>                   <FONT COLOR="#00FF00"><I>% close output file
+</I></FONT>                printf<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">'... Bye!'</FONT><FONT COLOR="#FFFFFF">,</FONT><FONT COLOR="#FFFFFF"><B>nl</B></FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">.</FONT>
+
+<FONT COLOR="#00FF00"><I>%------------------------------------------------------------------------------
+</I></FONT><FONT COLOR="#00FF00"><I>% dos2UnixFilter(?Wrapper)
+</I></FONT><FONT COLOR="#00FF00"><I>% - conversion: 0xD 0xA -&gt; 0xA ... remove all 0xDs
+</I></FONT>
+dos2UnixFilter<FONT COLOR="#FFFFFF">(</FONT>W<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT>
+ W <FONT COLOR="#FFFFFF">:</FONT><FONT COLOR="#FFFFFF">-</FONT><FONT COLOR="#FFFFFF">&gt;</FONT>
+       <FONT COLOR="#FFFFFF">(</FONT>
+        nonSymbol<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">13</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT> <FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">@</FONT> showAtom     <FONT COLOR="#00FF00"><I>% show the others
+</I></FONT>         <FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">:</FONT>
+        symbol<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#00FFFF">[</FONT><FONT COLOR="#00FFFF">13</FONT><FONT COLOR="#00FFFF">]</FONT><FONT COLOR="#FFFFFF">)</FONT>                    <FONT COLOR="#00FF00"><I>% ignore 0xD
+</I></FONT>       <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">&lt;</FONT><FONT COLOR="#FFFFFF">*</FONT><FONT COLOR="#FFFFFF">&gt;</FONT> <FONT COLOR="#FFFFFF">.</FONT>
+
+<FONT COLOR="#00FF00"><I>%- EOF ------------------------------------------------------------------------
+</I></FONT></FONT>
+</PRE>
+</BODY>
+</HTML>

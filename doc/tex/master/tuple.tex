@@ -1,0 +1,55 @@
+\subsection{Reprezentace n-tic}\label{ReprezentaceNTic}
+
+V~knihovnì kombinátorù parserù jsou n-tice reprezentovány
+posloupností polo¾ek zøetìzenıch pomocí operátoru \verb|>/2|~---
+jako vhnízdìné dvojice. 
+Ji¾ pøi návrhu rozhraní parserù jsme zvolili konvenci, v~ní¾ je
+vısledek v~seznamu úspì¹nıch rozkladù svázán s~nezpracovanou èástí
+vstupu do dvojice operátorem \verb|>/2|. Vı¹e uvedenou reprezentaci
+n-tic budeme také velmi èasto pou¾ívat uvnitø vısledkù samotnıch
+k~zachycení struktury vstupního textu~--- polo¾ky n-tic budou
+øetìzeny jak s~levou, tak s~pravou asociativitou.
+
+Proto jsou pøipraveny predikáty umo¾òující manipulace s~n-ticemi, které jsou navr¾eny s~ohledem na vyu¾ívání v~predikátech 
+vy¹¹ího øádu, kde také nacházejí nejvìt¹í uplatnìní.
+Pøedstavíme si pouze ty nejdùle¾itìj¹í. Prvním z~nich je 
+konstruktor dvojice:\index{*>*@\verb+*>*+}
+\begin{quote}\begin{verbatim}
+% *>*(+FunN, +FunR, +Input, -NewTuple)
+*>*(FunN,FunR,I,(N>R)):-
+    :-@[FunN,I,N],
+    :-@[FunR,I,R].
+\end{verbatim}\end{quote}
+a~dal¹ími dvìmi jsou selektory:\index{fstTuple@\verb+sndTuple+}\index{sndTuple@\verb+sndTuple+}
+\begin{quote}\begin{verbatim}
+% fstTuple(+Tuple, -NotParsedRest)
+fstTuple(N>_,N).
+
+% sndTuple(+Tuple, -Result)
+sndTuple(_>R,R).
+\end{verbatim}\end{quote}
+V~pøípadech, kdy je term s~n-ticí pøímo dostupnı, je pou¾ití vı¹e uvedenıch
+predikátù zpravidla zbyteèné, av¹ak pøi manipulacích v~predikátech 
+vy¹¹ího øádu se bez nich neobejdeme. To platí i~pro následující
+predikát urèenı ke konverzi mezi n-ticemi a~prologovskım seznamem: 
+\begin{quote}\begin{verbatim}
+% tuple2List(?Tuple, ?List)
+tuple2List((R1>R2),[R1|R2]).
+\end{verbatim}\end{quote}
+Dal¹í dva predikáty jsou obdobami základních operací se seznamy. 
+Variantami pro n-tice jsou \verb+memberTuple/2+ pro urèení 
+vıskytu prvku v~n-tici a~\verb+appendTuple/3+ pro øetìzení n-tic.
+
+\vskip 2mm
+\noindent
+Nakonec si je¹tì uka¾me pøíklad pou¾ití novì zavedenıch predikátù:
+\begin{quote}\begin{verbatim}
+?- mapList(fstTuple *>* (const(mod) *>* sndTuple),
+|          ["x">"y","y">"z"],
+|          R).
+R= ["x"> (mod>"y"), "y"> (mod>"z")]
+Yes
+\end{verbatim}\end{quote}
+
+\endinput
+-------------------------------------------------------------------------------

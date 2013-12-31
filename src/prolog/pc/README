@@ -1,0 +1,14 @@
+hop/
+	Podpora programovani vyssiho radu.
+
+library/
+	Knihovna kombinatoru parseru.
+
+pc*.pl
+	Zavadece knihovny pro ruzne implementace Prologu:
+        	pcBP*.pl	... BinProlog
+        	pcSWI.pl	... SWI Prolog
+        	pcLPA*.pl	... LPA Prolog
+
+- EOF -
+                

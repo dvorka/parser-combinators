@@ -1,0 +1,35 @@
+#! /bin/bash
+#------------------------------------------------------------------------------
+#                          Change HTML encoding meta tag
+#
+#                                   Martin Dvorak
+#                                       1999
+#------------------------------------------------------------------------------
+# Change:
+#  1. character encoding
+#  2. <BODY > tag
+
+echo ""
+echo "Changing character set in HTML source: iso-8859-1 -> iso8859-2..."
+
+CURRENT_PATH=""
+
+find | grep ".html" | while read FILE
+ do
+  
+  echo -n " --> ${CURRENT_PATH}${FILE}"
+
+  cat ${CURRENT_PATH}${FILE} > tempfile
+  echo -n "."
+  # awk -f importpages.awk tempfile > ${CURRENT_PATH}${FILE}
+  cat tempfile | \
+  awk -- '/charset=iso-8859-1/ { printf $1 " " $2 " " $3 " charset=iso-8859-2\">\n" }
+          /<BODY >/            { printf "<BODY TEXT=\"#FFFFFF\" BGCOLOR=\"#485068\" LINK=\"#C6E2FF\" VLINK=\"#C6E2FF\" ALINK=\"#008000\">\n" }
+         !/charset=iso-8859-1/ and !/<BODY >/ { print $0 }' \
+    > ${CURRENT_PATH}${FILE}
+
+  echo -n "."
+  rm tempfile
+  echo "."
+
+done

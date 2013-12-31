@@ -1,0 +1,470 @@
+\chapter{Iterace}\label{Iterace}\index{iterace}
+Jednou z~výhod metody kombinátorového vytváøení parserù je 
+libovolná roz¹iøitelnost mno¾iny konstruktorù.
+Zatímco v~generátorech parserù, jím¾ je tøeba Happy \cite{HaskellG}, 
+jsme omezeni na pevnì danou mno¾inu konstruktorù, 
+kterou nám formalismus pro popis gramatiky poskytuje, 
+pøi kombinátorovém vytváøení parserù mù¾e být tato mno¾ina 
+libovolnì roz¹iøována. Jak ji¾ bylo uvedeno, parsery zde hrají 
+roli stavebních kamenù a~my mù¾eme definovat libovolné mno¾ství 
+konstruktorù, které jejich syntézou vytváøejí nové, zpravidla 
+slo¾itìj¹í parsery øe¹ící konkrétní úlohy.
+
+Tato kapitola je vìnována rùzným variantám iterace, které lze
+pou¾ít pøi analýze rùzných syntaktických konstrukcí.
+
+V~její první èásti vytvoøíme mutátory odpovídající operátorùm \verb|*|, 
+\verb|+| a~\verb|?|, jen¾ pocházejí z~formalismu regulárních výrazù.
+V~èásti druhé se budeme vìnovat iteraci se separátory; na ni
+nepøímo navá¾e èást \ref{IteraceSeSemantickyRelevantnimiSeparatory} 
+vìnovaná iteraci se sémanticky relevantními separátory, ve které 
+budou napøíklad rozebrány zpùsoby ananalýzy aritmetických výrazù.
+
+%..............................................................................
+
+\section{Jednoduchá iterace}\label{JednoduchaIterace}
+V~první èásti této kapitoly, jejím¾ tématem je iterovaná aplikace
+parserù, se budeme vìnovat její nejobyèejnìj¹í variantì, kterou je
+iterace jednoduchá.\index{iterace!jednoduchá}
+
+A~zaèneme motivaèním pøíkladem. Definujme parser \verb|prologVar|
+pøijímající identifikátor prologovské promìnné. Její identifikátor
+zaèíná velkým písmenem
+nebo znakem \verb|'_'| a~je tvoøen libovolnou posloupností písmen,
+èíslic a~znaku \verb|'_'|:
+\begin{quote}\begin{verbatim}
+prologVar(W):-
+ W :->
+        ((upper <:> symbol("_")) <&> prologVarBody).
+
+prologVarBody(W):-
+ W :->  
+         (fulfil(isDigitChar_) <&> prologVarBody
+          <:>
+         epsilon).
+\end{verbatim}\end{quote}
+S~konstrukcí iterací objevující se v~\verb|prologVarBody|, kterou lze obecnì
+vyjádøit v~Backusovì normální formì jako: 
+$$ <p*> ::= <p> <p*>|\varepsilon$$ 
+se mù¾eme setkat velmi èasto. V~pøedchozím textu byla pou¾ita napøíklad 
+v~parseru \verb|nat|. Jistì si lze snadno pøedstavit mnoho dal¹ích
+parserù s~podobnou strukturou. Pøíkladnì parser øetìzce \uv{prázdných
+znakù} (white space), písmen èi znakù speciálních.
+
+Aby jsme nemuseli zbyteènì definovat mno¾ství rùzných parserù s~podobnou
+strukturou, zavedeme pro tuto konstrukci iterátor, který mutuje parser
+tak, ¾e je opakovanì aplikován na vstupní text.
+
+Tak jako byla BNF dodateènì obohacena o~operaci iterace i~my
+obohatíme na¹i knihovnu o~jí odpovídající konstruktor, nebo» si
+to svým významem nepochybnì zaslou¾í:\index{<**>@\verb+<**>+}
+\begin{quote}\begin{verbatim}
+<**>(P,W):-
+ W :->
+        (P <&> P<**>
+          <:>
+         epsilon).
+\end{verbatim}\end{quote}
+Proto¾e jsme pou¾ili kombinátor \verb|<&>|, je výsledek vydán ve formì
+seznamu. Proto¾e mutátor vrací v¹echny mo¾né pøípustné rozklady,
+znamená to, ¾e pokud sel¾e v~$i$-té iteraci, jeho výstupem bude seznam
+úspì¹ných rozkladù obsahující $i$ výsledkù pro ka¾dou z~$0$ a¾ $i-1$
+úspì¹ných aplikací parseru $P$. Dle zavedené konvence budou výsledky
+seøazeny v~poøadí podle klesající délky.
+
+Ve vìt¹inì pøípadù se budeme zajímat pouze o~první rozklad
+ze struktury LOS, ve kterém je daný parser úspì¹nì aplikován 
+v~nejvìt¹ím mo¾ném poètu. Ov¹em, ¾e bychom mohli pou¾ít \uv{diamant} pro
+dodateèné oøíznutí seznamu úspì¹ných rozkladù, my jej ale vlo¾íme
+pøímo do varianty mutátoru \verb|<**>| oøezávající LOS ji¾ v~prùbìhu
+výpoètu:\index{<<*>>@\verb+<<*>>+}
+\begin{quote}\begin{verbatim}
+<<*>>(P,W):-
+ W :->
+        (P <&> P<<*>>
+          <:>
+         epsilon <>).
+\end{verbatim}\end{quote}
+Co touto mírnou modifikací získáme? Pøedev¹ím omezíme pamì»ovou, ale
+také èasovou slo¾itost. Pùvodní mutátor \verb|<**>| nejdøíve zanoøením 
+na dno rekurze vytvoøí nejdel¹í derivaci. Pak se pøi vynoøování uplatòují
+primitiva \verb|epsilon|, díky nim¾ se v~jeho prùbìhu vytvoøí zbylé
+derivace. Oøíznutím v~\verb|<<*>>| v¹ak zùstává v~seznamu úspì¹ných
+rozkladù nejvý¹e jedna derivace~--- a~to právì ta maximální. Není tedy
+nutné øetìzit výsledky pøebyteèných derivací (v \verb|<&>|). Pøi $i$
+úspì¹ných aplikacích parseru $P$ tedy u¹etøíme
+$ \sum_{j=1}^{i} j~- i$ øetìzení.
+
+\hskip 3mm
+
+\noindent
+Vra»me se k~pøíkladu prologovské promìnné z~úvodu této èásti
+a~pou¾ijme právì vytvoøený iterátor:\index{prologVar@\verb+prologVar+}
+\begin{quote}\begin{verbatim}
+prologVar(W):-
+ W :->
+        ((upper <:> symbol("_")) 
+           <&> 
+            fulfil(isDigitChar_)<<*>>).
+\end{verbatim}\end{quote}
+V~pøípadech jiných parserù bude potøeba zpracovávat èi øetìzit
+výsledky po jednotlivých aplikacích iterovaného parseru vlastním             
+zpùsobem. Dostat pod kontrolu i~øetìzení umo¾níme konstruktorem:\index{<*a*>@{\tt <*"@*>}}
+\begin{quote}\begin{verbatim}
+% <*@*>(+Parser,+Bottom-Function,?Wrapper)
+<*@*>(P,B-F,W):-
+ W :->
+        (P <&>> P<*@*>B-F <@ F
+          <:>
+         B).
+\end{verbatim}\end{quote}
+Tento mutátor je dostateènì obecný na to, aby umo¾òoval specifikovat jak
+operaci, kterou se mají výsledky po iteracích modifikovat, tak parser
+fungující jako terminátor. Pomocí \verb|<*@*>| lze zavést parser
+vydávající výsledek v~n-tici: \index{<**>>@\verb+<**>>+}
+\begin{quote}\begin{verbatim}
+<**>>(P,W):-
+ W :->
+        (P <*@*>return(nil)-id).
+\end{verbatim}\end{quote}
+èi vyjádøit \verb|<**>| jiným zpùsobem:
+\begin{quote}\begin{verbatim}
+<**>(P,W):-
+ W :->
+        (P <*@*>epsilon-tuple2List).
+\end{verbatim}\end{quote}
+Stejnì jako v~pøípadì mutátoru \verb|<**>|, je i~pro \verb|<*@*>|
+definována \uv{diamantová} verze. Konvence pro pojmenovávání iterátorù
+je zøejmá z~tabulky \ref{Mutatory0N}. Èíslo $i$ v~ní urèuje poèet 
+úspì¹ných aplikací parseru. V~posledním øádku je
+uveden maximální poèet derivací v~seznamu úspì¹ných rozkladù. 
+
+\begin{table}
+\caption{Mutátory pro 0 a~více iterací}\label{Mutatory0N}
+\begin{center}
+\begin{tabular}{|c||c|c||l|}
+\hline
+Poèet iterací & Základní & \uv{Diamantové} & Výsledek\\
+\hline
+$i \geq 0$ & \verb|<**>|&\verb|<<*>>|  & seznam\\
+$i \geq 0$ & \verb|<*@*>|&\verb|<<*@>>|& dle param.\\
+$i \geq 0$ & \verb|<**>>|&             & n-tice\\
+\hline
+Derivací v~LOS& $i+1$ & $1$ & \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Právì \uv{diamantovou} verzi pou¾ijeme pro vytvoøení
+dvou mutátorù parserù, jen¾ modifikují daný parser tak, ¾e ignoruje
+\uv{prázdné znaky} pøedcházející resp. následující za akceptovanou
+sentencí:\index{#>@\verb+#>+}\index{<#@\verb+<#+}
+\begin{quote}\begin{verbatim}
+#>(P,W):-
+ W :->
+     ( whiteSpace<<*@>>return(whiteSpace)-sndTuple &> P ).
+
+<#(P,W):-
+ W :->
+     ( P <& whiteSpace<<*@>>return(whiteSpace)-sndTuple ).
+\end{verbatim}\end{quote}
+Ano, \uv{diamantová} varianta \verb|<<*@>>| se má k~\verb|<*@*>|
+stejnì jako \verb|<<*>>| k~\verb|<**>|.  Seznam úspì¹ných rozkladù je
+v~prùbìhu výpoètu oøezáván. Navíc, proto¾e nás typicky
+nezajímá výsledek slo¾ený z~\uv{prázdných znakù}, jsou tyto pomocí
+selektoru \verb|sndTuple| v~prùbìhu rozkladu odstraòovány a~nakonec vydá celý parser jako svou výslednou hodnotu atom
+\verb|whiteSpace|. Ale i~tento atom je nakonec odstranìn v~kombinátoru
+\verb|<&| resp. \verb|&>|:
+\begin{quote}\begin{verbatim}
+?- s("[  _flippedList ]")+L :->
+|       brackets( #>prologVar<# ).
+L= [s("") > "_flippedList"]
+Yes
+\end{verbatim}\end{quote}
+Prázdné znaky umo¾òují pou¾ívat ve zdrojových textech volný formát
+zápisu~--- obvykle mohou být volnì vkládány mezi libovolné dvì
+lexikální polo¾ky a~slou¾í tak k~pohodlnìj¹ímu a~èitelnìj¹ímu zápisu.
+
+\hskip 3mm
+
+Charakter komentáøù a~prázdných znakù je ve zdrojových textech
+podobný. Komentáøe mají význam pouze pro programátora. Po analyzování
+zdrojového kódu význam ztrácejí a~stejnì jako prázdné znaky nejsou do
+syntaktického stromu zpravidla vkládány.
+
+V~tomto odstavci se budeme vìnovat jednoøádkovému komentáøi, jen¾ je
+obvyklou souèástí programovacích jazykù. Vytvoøíme pro nìj parser na
+pøíkladu jazyka Prolog. Zde zaèíná znakem \verb|'%'| a~dále
+pokraèuje a¾ po znak nového øádku. Parser by tedy mìl pøijímat vstup
+a¾ po znak s~ASCII kódem $10$. Pro tento úèel pou¾ijeme nový
+kombinátor \verb|nonSymbol|:\index{nonSymbol@{\tt nonSymbol}}
+\begin{quote}\begin{verbatim}
+nonSymbol(S,W):-
+       fulfil(\==(S),W).
+\end{verbatim}\end{quote}
+Ten akceptuje znaky rùzné od parametru \verb|S|. V~knihovnì je
+pøipravena je¹tì spøíznìná varianta \verb|nonSymbols|.\index{nonSymbols@{\tt nonSymbols}}
+
+Vý¹e popsaná struktura komentáøe se objevuje ve vìt¹inì programovacích
+jazykù. Jednotlivé varianty se li¹í pouze v~tokenu, jím¾ komentáø zaèíná.
+Místo toho, abychom implementovali mnoho rùzných, ale
+podobných parserù, zavedeme jeden obecný kombinátor:\index{lineComment@{\tt lineComment}}
+\begin{quote}\begin{verbatim}
+lineComment(T,W):-
+ W :->
+        (token(T) 
+          &> 
+           nonSymbol([10])<<*@>>return(comment)-sndTuple).
+\end{verbatim}\end{quote}
+Parametr \verb|T| obsahuje token, jen¾ uvozuje komentáø. V¹e a¾ po konec
+øádku je ignorováno a~jako výsledná hodnota je vydán atom \verb|comment|.
+
+Za v¹echny pøíklady uveïme tøi následující:\index{prologLComment@{\tt prologLComment}}\index{haskellLComment@{\tt haskellLComment}}\index{makeLComment@{\tt makeLComment}}
+\begin{quote}\begin{verbatim}
+prologLComment(W):-
+        W :-> lineComment("%").
+haskellLComment(W):-
+        W :-> lineComment("--").
+makeLComment(W):-
+        W :-> lineComment("#").
+\end{verbatim}\end{quote}
+Ale vra»me se opìt k~formalizmu BNF.
+
+\vskip 3mm
+\noindent
+Jistì nebude pøekvapivé, kdy¾ nyní pøedstavíme mutátor korespondující
+s~dal¹í operací iterace z~roz¹íøené Backusovy normální formy
+vyjádøitelnou jako:
+$$
+<p+> ::= <p> <p*>
+$$
+Tato operace nachází uplatnìní v~pøípadech, kdy se zajímáme pouze o~neprázdné posloupnost výsledkù --- parser tedy musí být aplikován
+alespoò jednou.
+
+Definice tohoto mutátoru \verb|<++>| odpovídá vý¹e vyjádøené obecné
+definici. Jako jeho základ tedy pou¾ijeme \verb|<**>|:\index{<++>@{\tt <++>}}
+\begin{quote}\begin{verbatim}
+<++>(P,W):-
+ W :->
+        (P <&> P<**>).
+\end{verbatim}\end{quote}
+Opìt jsou v~knihovnì analogickým zpùsobem vytvoøeny varianty
+\verb|<<+>>| a~\verb|<+@+>| tohoto mutátoru, viz tabulka \ref{Mutatory1N}.\index{<<+>>@{\tt <<+>>}}\index{<+a+>@{\tt <+"@+>}}
+
+\begin{table}
+\caption{Mutátory pro 1 a~více iterací}\label{Mutatory1N}
+\begin{center}
+\begin{tabular}{|c||c|c||l|}
+\hline
+Poèet iterací & Základní & \uv{Diamantové} & Výsledek\\
+\hline
+$i \geq 0$ & \verb|<++>|&\verb|<<+>>|  & seznam\\
+$i \geq 0$ & \verb|<+@+>|&\verb|<<+@>>|& dle param.\\
+\hline
+Derivací v~LOS& $i$ & $0 \vee 1$ & \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Pov¹imnìme si je¹tì jedné vlastnosti \verb|<++>|. Zatímco u~mutátoru
+\verb|<**>| jsme se mohli spolehnou na to, ¾e v¾dy uspìje a~vydá
+alespoò jeden výsledek, v~pøípadì \verb|<++>| to u¾ neplatí. Ten mù¾e
+selhat a~skonèit pouze s~prázdným seznamem úspì¹ných rozkladù. V~pøípadì 
+nesprávného pou¾ití tedy mù¾e dojít ke ztrátì výsledkù.
+
+Variantu mutátoru \verb|<++>| pou¾ijeme k~reformulaci parseru 
+pøirozených èísel (tentokrát ji¾ skuteènì poslední):\index{natural@{\tt natural}}
+\begin{quote}\begin{verbatim}
+natural(W):-
+ W :->
+        (digit<<+>> <@ foldL(evalNatural,0)).
+\end{verbatim}\end{quote}
+
+\vskip 3mm
+Poslední operací BNF, se kterou se seznámíme v~této èásti, je operace
+vyjadøující \uv{volbu}~--- pøipou¹tí tedy jednu nebo ¾ádnou
+aplikaci daného parseru:
+$$
+<p?> ::= <p> | \varepsilon
+$$
+Mù¾eme se s~ní setkat, stejnì jako s~døíve uvedenými operacemi, i~v~jiných
+formalismech. Jedním z~nich jsou ji¾ zmínìné regulární výrazy. Definujme
+nyní parser vydávající strukturu LOS s~¾ádnou nebo s~jednou derivací,
+pro zmìnu nejdøíve v~obecné verzi:
+\begin{quote}\begin{verbatim}
+<?@?>(P,No-Yes,W):-
+ W :->
+        ( P <@ Yes
+           <:>
+          return(No)).
+\end{verbatim}\end{quote}
+Mutátor \verb|<?@?>| má dva pøidané parametry. Prvním je konstanta
+$No$ pou¾itá v~pøípadì neexistence pøípustné sentence a~druhým
+predikát $Yes$ pro transformaci získané hodnoty v~pøípadì úspìchu.
+
+Varianta \verb|<??>| je vhodná pro pou¾ití spoleènì se
+seznamy. Vzhledem k~její jednoduchosti ji nebudeme vyjadøovat pomocí
+obecnìj¹í verze, ale radìji tak uèiníme pøímo:
+\begin{quote}\begin{verbatim}
+<??>(P,W):-
+ W :->
+        ( P
+           <:>
+          epsilon).
+\end{verbatim}\end{quote}
+Tuto èást vìnovanou jednoduché iteraci zakonèíme pøíkladem.
+
+\vskip 3mm
+\subsubsection*{Pøíklad:}\vskip -3mm
+V~ukázce konkrétního pou¾ití mutátorù z~této èásti navá¾eme na
+\verb|natural| a~vytvoøíme dal¹í dva parsery pro èíselné typy ---
+pro èísla celá a~èísla s~pohyblivou øádovou èárkou.
+
+Parser celých èísel se li¹í od \verb|natural| tím, ¾e mu mù¾e
+pøedcházet znaménko mínus. Podle jeho výskytu mutátor volby vydá
+hodnotu $1$ resp. $-1$ jí¾ je vynásobeno:
+\begin{quote}\begin{verbatim}
+int(W):-
+ W :->  ( symbol("-")<?@?>1-const(-1)
+           <&>>
+          natural <@ alter(C>N,C*N) => eval ).                  
+\end{verbatim}\end{quote}
+Slíbeným druhým parserem je \verb|double|. Nejdøíve definujeme
+parser pro zlomkovou èást:
+\begin{quote}\begin{verbatim}
+fractionalPart(W):-
+ W :->  ( digit<<+>> <@ foldR(evalFract,0.0) ).
+        
+evalFract(I,Acc,Result):-
+        Result is (I+Acc)/10.
+\end{verbatim}\end{quote}
+Èíslo s~pohyblivou øádovou èárkou se skládá z~celoèíselné èásti,
+desetinné teèky, desetinné èásti, znaku \verb|e| nebo \verb|E| a~celoèíselného exponentu. Jak je vidìt, desetinná nebo exponentová
+èást mù¾e být vynechána:
+\begin{quote}\begin{verbatim}
+double(W):-
+ W :->
+     ((int
+        <&>>
+       (symbol(".") &> fractionalPart)<<?@>>0.0-id
+        <&>>
+       (symbols("eE") &> int)<<?@>>0.0-id) 
+                                      <@ evalDouble).
+
+evalDouble(I>(F>E),R):-
+        I<0 -> R is (I+F*(-1))*10^E ; R is (I+F)*10^E.
+\end{verbatim}\end{quote}
+Pou¾ití právì zkonstruovaného parseru vyzkou¹íme na pøíkladu:
+\begin{quote}\begin{verbatim}
+?- double(s("-1.2e-3")+L).
+L = [s([])> -0.0012] 
+Yes
+\end{verbatim}\end{quote}
+
+% Shrnující tabulka mutátorù, které jsou k dispozici 
+% # iterací, obecná verze, seznamová verze
+
+%..............................................................................
+
+\section{Iterace se separátory}\index{iterace!se separátory}
+Velmi obvyklou konstrukcí vyskytující se ve vìt¹inì programovacích
+jazykù je posloupnost polo¾ek oddìlených separátory. Lze ji zpracovat
+zpùsobem, který je ponìkud obecnìj¹í formou iterované aplikace
+parseru, pro ni¾ jsme v~minulé èásti vybudovali rozsáhlou sadu
+mutátorù.
+
+Jejím pøíkladem mohou být parametry predikátu èi polo¾ky prologovského
+seznamu oddìlené èárkou nebo posloupnost pøíkazù v~ní¾ je jako
+oddìlovaè pou¾it støedník.
+
+Jedním z~typických pøípadù pou¾ití knihovny konstruktorù parserù je
+úloha analýzy dat s~cílem jejich pøevodu do formátu vhodného pro dal¹í
+zpracování. Vstupní data mohou mít buï formu èitelnìj¹í pro èlovìka
+nebo mohou být tøeba výstupem nìjakého programu. V~takových situacích
+je nutné pøevést je z~externí reprezentace do interního formátu èi
+vhodné (v na¹em pøípadì prologovské) datové struktury. S~pomocí
+knihovních konstruktorù je mo¾né snadno a~rychle vytvoøit vhodný
+parser.
+
+Jako pøíklad si uka¾me u¾ivatelskou reprezentaci determinantu matice,
+v~ní¾ se objevuje syntaktická konstrukce zmínìná v~poèátku této
+èásti. Øádky determinantu jsou ohranièeny svislítky a~jednotlivé
+polo¾ky v~nich jsou oddìleny èárkami. Dále se pøipou¹tí výskyt
+prázdných znakù mezi jednotlivými lexikálními elementy. 
+\begin{center}
+{\tt
+\begin{tabular}{lrrrr}
+|&  1,& -5,& 7e-3& |\\
+|& 13,&  6,&    0& |\\
+|& -9,&  3,&  1.5& |\\
+\end{tabular}
+}
+\end{center}
+Podobných pøíkladù, jako je tento motivaèní, bychom nalezli jistì mnoho.
+Na¹ím cílem tedy bude vytvoøit v~závìru této èásti, s~pomocí nových
+kombinátorù, parser pøijímající øetìzec s~takovouto reprezentací a~vydávající jeho obsah ve vhodné prologovské struktuøe.
+
+Pro analyzování takovýchto konstrukcí nám poslou¾í kombinátor
+\verb|separatedBy| vytváøející pro daný parser polo¾ek $P$ a~separátorù $S$ parser pro posloupnost tìchto elementù:\index{separatedBy@{\tt separatedBy}}
+\begin{quote}\begin{verbatim}
+separatedBy(P,S,W):-
+ W :->
+        (P <&> ( S &> P )<<*>>).
+\end{verbatim}\end{quote}
+Separátory jsou v~prùbìhu rozkladu odstraòovány a~jednotlivé èleny
+posloupnosti ulo¾eny v~odpovídajícím poøadí do seznamu.
+Nejobvyklej¹ími speciálními pøípady tohoto kombinátoru jsou:\index{commaListOf@{\tt commaListOf}}
+\begin{quote}\begin{verbatim}
+commaListOf(P,W):-
+ W :->  P separatedBy symbol(",").
+
+semicolonListOf(P,W):-
+ W :->  P separatedBy symbol(";").
+\end{verbatim}\end{quote}
+V~pøípadech, kterým je napøíklad prologovský seznam, je nutné, aby
+kombinátor o¹etøoval situaci prázdného seznamu --- zavedeme tedy je¹tì
+varianty kombinátorù pro tento pøípad. Podobnì jako u~mutátorù pro
+iteraci k~tomu pou¾ijeme ji¾ vytvoøené definice:\index{separated0By@{\tt separated0By}}
+\begin{quote}\begin{verbatim}
+separated0By(P,S,W):-
+ W :->
+        (P separatedBy S
+          <:>
+         epsilon).
+\end{verbatim}\end{quote}
+Definice zbylých dvou speciálních pøípadù tohoto kombinátoru je
+zøejmá. A~teï ji¾ slíbený parser determinantu matice:\index{determinant@{\tt determinant}}
+\begin{quote}\begin{verbatim}
+determinant(W):-
+ W :->
+        (   commaListOf #>double<#
+           separatedBy
+            (symbol("|") <&> #>symbol("|"))
+          enclosedIn
+           symbol("|") and symbol("|")
+        ).
+\end{verbatim}\end{quote}
+Determinant matice je tedy posloupnost posloupností desetinných èísel
+oddìlených èárkami, která je oddìlena dvìma svislítky mezi nimi¾
+mohou být prázdné znaky. Celý determinant je uzavøen opìt do svislítek.
+
+Velice snadno jsme tedy pro ná¹ pøíklad vytvoøili parser:
+\begin{quote}\begin{verbatim}
+?- s("| 1, -5, 0.007 |
+|     | 13, 6,    0  |
+|     | -9, 3,  1.5  |")+L :-> determinant.
+
+L= [s([])>[[1, -5, 0.007], [13, 6, 0], [-9, 3, 1.5]]]
+Yes
+\end{verbatim}\end{quote}
+
+\vskip 3mm
+Nároènìj¹í situací je pøípad, kdy separátory nesou nìjakou informaci~---
+nejsou tedy pouhými oddìlovaèi, ale mají význam i~z~hlediska
+sémantického. Zpracování takových vstupù se budeme vìnovat v~první
+èásti kapitoly~\ref{AnalyzaVyrazu}.
+
+\endinput
+-------------------------------------------------------------------------------

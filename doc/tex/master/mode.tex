@@ -1,0 +1,443 @@
+\chapter{Módy parserù}\label{ModyParseru}\index{módy parserù}\index{parsery!módy}
+V~této kapitole se seznámíme s~pùvodní programátorskou technikou~---
+s~\emph{módy parserù}. Její název mù¾e být
+na první pohled ponìkud zavádìjící. Jak se uká¾e v~dal¹ím textu,
+módy parserù nemají nic spoleèného s~módy promìnných, ale jsou
+metodou, která umo¾òuje spou¹tìní parserù v~rùzných \uv{re¾imech}.
+
+\vskip 2mm
+Pøedstavíme si tedy konvenci, pomocí ní¾ bude mo¾né pouhým
+roz¹íøením stávajících definic parserù a~konstruktorù docílit jejich
+vìt¹í funkènosti a~znovupou¾itelnosti kódu, navíc získáme vìt¹í míru kontroly
+nad zpùsobem jejich práce.
+
+A¾ dosud parsery pøipou¹tìly pouze vstup ve formì prologovského øetìzce.
+Zpùsob jejich výpoètu nebylo rovnì¾ mo¾né ¾ádným zpùsobem globálnì
+ovlivòovat ani pøená¹et potøebné bìhové informace oddìlenì od výsledkù,
+a~tak musel být zpùsob rozkladu v¾dy explicitnì urèen pou¾itím
+odpovídajícího konstruktoru. Pou¾ité parsery tak mìly víceménì jednoúèelový
+charakter. V¹echny tyto nedostatky odstraníme v~prùbìhu této kapitoly.
+
+
+\section{Selektory}
+Selektory módù hrají v~celém mechanismu klíèovou roli. Urèují toti¾
+zpùsob výpoètu uvnitø jednotlivých procedur. \emph{Selektor} je 
+jednoznaèný identifikátor módu, který \uv{vybírá} v~definici
+daného parseru resp. konstruktoru správnou klauzuli urèenou pro
+daný mód. Tvùrce parseru pak mù¾e pro jednotlivé pøípady definovat
+rùzné chování parseru dle aktuálního módu, jen¾ je urèen právì selektorem.
+Klauzuli se vstupní èástí vstupnì/\-výstupního termu, která se unifikuje
+se v¹emi selektory budeme nazývat \emph{implicitní cestou} výpoètu
+nebo klauzulí implicitní.
+
+Z~vnìj¹ku, tj. z~pohledu programátora, postaèí vytvoøení jediné instance
+parseru. Pou¾itím rùzné kombinace selektorù pak bude mo¾né získávat
+nové módy a~tím parsery s~novými vlastnostmi, bez nutnosti jakýchkoli
+zásahù do zdrojového kódu.
+
+Nejdøíve roz¹íøíme konvenci rozhraní parserù z~èásti \ref{RozhraniParseru}
+tak, ¾e selektor bude zapouzdøovat vstup ve formì  vstupnì/\-výstupního
+termu a~dal¹í selektory  budou moci být do sebe navzájem vnoøovány.
+Zpùsob vnoøení bude zpravidla pro jednotlivé selektory specifický~---
+viz obrázek \ref{ImgVnorovaniModu} na stranì \pageref{ImgVnorovaniModu}. 
+Modifikujme tedy rozhraní parserù následovnì:
+\begin{quote}
+$parser(+Arg_{1}, ..., +Arg_{n}, +Sel(Par_1, \dots, Par_n) + -LOS)$
+\end{quote}
+kde $Sel$ je selektor nìkterého z~módù a~$Par_i$ je buï bì¾ný parametr
+nebo vnoøený selektor. Hloubka vnoøení jednotlivých selektorù  mù¾e
+být obecnì libovolná.
+
+\section{Módy}
+V~následujícím textu vytvoøíme módy pro:
+
+\begin{description}
+\item [Pøijímání vstupu z~rùzných zdrojù] a~to nejen z~prologovských øetìzcù,
+ale rovnì¾ ze souborù. V~tomto pøípadì staèí doplnit implementaci
+jediného primitiva pro daný typ vstupního textu.
+\item [Efektivní pøenos a~distribuci dat s~globálním charakterem,] jako jsou
+rùzné tabulky a~okolí.
+\item [Globální urèení chování klíèových konstruktorù,] napøíklad kombinátoru
+alternativní kompozice a~zpùsobu jeho vykonávání.
+\item [Pøenos stavových informací výpoètu.] Pøíkladem takové informace
+mù¾e být pozice ve vstupním textu èi propagace hlá¹ení o~výskytu výjimeèné
+události.
+\item [Statickou a~dynamickou analýzu parserù] s~charakterem abstraktní
+interpretace. Bude tak kupøíkladu mo¾né urèení pøípustného výhledu
+parseru. Tyto módy vyu¾ijeme v~kapitole \ref{DeterministickeKonstruktoryParseru}
+vìnované deterministickým konstruktorùm parserù, kde v~módech tohoto
+typu budeme provádìt výpoèet mno¾in FIRST a~FOLLOW.
+\end{description}
+A~nyní ji¾ pøistupme k~vytváøení konkrétních módù.
+
+
+\subsection{Vstup}\label{Vstup}
+V~úvodních kapitolách jsme pou¾ívali pro jeho názornost reprezentaci
+vstupu výhradnì ve formì prologovských øetìzcù. Pro zpracování
+del¹ího vstupu taková reprezentace v¹ak není pøíli¹ vhodná. Zavedeme
+tedy mód umo¾òující pou¾ívat jako zdroj vstupu soubory a~nazveme
+jej \verb+file/2+. Jeho selektor má následující signaturu:
+\begin{quote}
+$file(Position, Handle)$
+\end{quote}
+kde $Position$ je pozice a~$Handle$ deskriptor vstupního souboru. Nyní se
+také vyjasòuje dùvod ulo¾ení vstupu ve formì øetìzce do struktury
+\verb+s/1+, které mohlo vypadat v~úvodních kapitolách ponìkud zbyteènì~---
+\verb+s/1+ je selektor módu pro zpracování vstupního textu
+ve formì øetìzce. 
+
+Informace potøebné pro inicializaci módu \verb+file/2+
+lze získat pomocí pøipravených predikátù \verb+openFile/3+ (deskriptor) 
+a~\verb+atStream/2+ (pozice). Reprezentace vstupního textu musí 
+umo¾òovat elementární operace, viz \ref{RozhraniParseru}. Ty jsou
+zde realizovány pomocí predikátù \verb|get0/1| a~\verb|setStream/2|.
+Mód o¾ivíme pøidáním \emph{jediné} klauzule do procedury \verb|item/1|:
+\begin{quote}\begin{verbatim}
+item(file(Sh,O)+L):-
+        setStream(Sh,O),get0(B),
+        (B=(-1) -> L=[] 
+                ;  atStream(Sh,Oo),L=[file(Sh,Oo)>B]).
+\end{verbatim}\end{quote}
+Jak jednoduché! Díky celkovému návrhu knihovny nyní staèí pouze
+otevøít vstupní soubor a~mù¾eme pou¾ít \emph{kterýkoli} parser
+pro jeho analýzu. V¹echny dosud definované parsery a~konstruktory
+mají pouze implicitní klauzule tj. ty klauzule, které se 
+unifikují se v¹emi selektory a~o~reprezentaci vstupu se 
+nezajímají. Jediné primitivum \verb|item| odebírá první polo¾ku
+ze vstupu a~jeho proceduru jsme právì doplnili.
+
+Pro v¹echny èasto pou¾ívané módy jsou navíc definovány predikáty
+s~obecnou signaturou:
+\begin{quote}
+$invoke$$<$$Mode$$>$$(Arg_1, \dots, Arg_n)$
+\end{quote}
+kde $<$$Mode$$>$ je název módu, je¾ umo¾òují spou¹tìní parserù v~daném
+re¾imu i~s~inicializací. V~pøípadì módu \verb+file/2+ tedy mù¾eme
+pou¾ít:
+\begin{quote}\begin{verbatim}
+?- invokeFile('input.bnf',parserBnf,L).
+\end{verbatim}\end{quote}
+
+\vskip 3mm
+Je¹tì se na chvíli zastavme u~mo¾ností, které nám módy, co se týèe
+zdrojù vstupu, nabízejí.
+Doplnìním klauzule do procedury primitiva \verb+item+ mù¾eme analogickým 
+zpùsobem, jako jsme to uèinili v~pøípadì módu \verb+file/2+, doplnit 
+knihovnu o~dal¹í typy vstupu. 
+
+Zajímavé mù¾e být napøíklad pou¾ití \uv{generátorù vstupu}.
+Primitivum \verb+item+ místo získávání vstupu z~nìjakého vnìj¹ího zdroje 
+volá predikát generující vstup. Takovým typem vstupu je napøíklad
+konstrukce \emph{streamù} tak, jak ji známe z~funkcionálního jazyka ML.
+
+Elementární jednotkou vstupního textu nemusí být pouze dosud pou¾ívané
+ASCII kódy, ale mù¾eme si pøedstavit mód, ve kterém se ze souboru
+naèítá proud termù, který byl pøipraven lexikálním analyzátorem 
+(\ref{VicepruchodovyRozklad}). A~jistì existuje je¹tì celá øada 
+dal¹ích mo¾ností.
+
+\subsection{Pøenos stavové informace}
+Do druhé skupiny patøí módy urèené pro pøenos stavové informace 
+s~globální platností.
+
+
+\subsubsection*{off(Offset, Selector)}\vskip -3mm\label{ModOffset}
+\index{módy parserù!\verb+off/2+}
+\verb+off/2+ je mód udr¾ující stavovou informaci o~aktuální pozici ve zdrojovém
+textu vyjádøenou relativním posunem v~poètu polo¾ek vstupu. Proto¾e jsou 
+polo¾ky vstupu naèítány výhradnì primitivem \verb+item+, doplníme jeho
+proceduru  o~následující klauzuli:
+\begin{quote}\begin{verbatim}
+item(off(Off,I)+L):-
+        item(I+Li) -> (Li=[N>R] -> New is Off+1,L=[off(New,N)>R]
+                                ;  L=[]).
+\end{verbatim}\end{quote}
+Pøi volání parseru v~tomto módu potom $Offset$ obsahuje pozici ve
+vstupu a~$Selektor$ je pøípustný vnoøený selektor dle obrázku 
+\ref{ImgVnorovaniModu}:
+\begin{quote}\begin{verbatim}
+?- off(0,s("{ This is off/2 test! } listing(item)."))+L :->
+        pascalNestedComment.
+L = [off(23, s(" listing(item)."))>comment] 
+Yes
+\end{verbatim}\end{quote}
+
+\subsubsection*{line(Line, Selector) a~lineCol(Line, Column, Selector)}\vskip -3mm
+\index{módy parserù!\verb+line/2+}
+\index{módy parserù!\verb+lineCol/3+}
+Stejnì jako \verb+off/2+ udr¾ují módy \verb+line/2+ a~\verb+lineCol/3+
+informaci o~pozici ve vstupním textu ve formì aktuálního øádku resp.
+aktuálního øádku a~sloupce. Zpùsob zavedení tìchto módù je stejný jako
+v~pøedchozích pøípadech. Jsou vhodné pøedev¹ím pøi výpisech chybových
+hlá¹ení --- lze rychle a~snadno lokalizovat místo výskytu chyby.
+
+\vskip 3mm
+Dal¹í z~mo¾ných aplikací tìchto módù je ze¹tíhlování seznamu úspì¹ných
+rozkladù. V~literatuøe vìnované strukturální analýze textu se nìkdy pøi 
+nedeterministickém výpoètu pou¾ívá pro výbìr \uv{nadìjné} cesty délka
+dosud zpracovaného vstupu. Takový pøístup mù¾eme díky módù vyzkou¹et
+v~knihovnì konstruktorù parserù i~my. Pro tento úèel je pøipraven
+mutátor \verb+<^>+, jen¾ je variantou \uv{diamantu}. Nevydává
+v¹ak derivaci z~hlavy seznamu úspì¹ných rozkladù, ale derivaci
+s~nejvìt¹í váhou:\label{<b>}\index{<b>@\verb+<^>+}
+\begin{quote}\begin{verbatim}
+<^>(P,I+TrimL):-
+        I+L :-> P,
+        <^>^(L,_,TrimL).
+\end{verbatim}\end{quote}
+Tuto derivaci hledá ve struktuøe LOS pomocný predikát \verb+<^>^+.
+Získání váhy se provádí vybalením nejvnìj¹nìj¹ího vhodného selektoru
+(\verb+off/2+, \verb+line/2+, \verb+lineCol/3+)
+pomocí predikátu \verb+pcGetWeight/2+. V~pøípadì rovnosti vah rozhoduje mezi 
+derivacemi jejich poøadí v~seznamu úspì¹ných rozkladù.
+Programátor mù¾e roz¹íøit predikát \verb+pcGetWeight/2+ tak, aby
+pracoval i~v~jeho vlastních módech.
+
+Tento mutátor byl spoleènì s~módem \verb+off/2+ pou¾it v~ukázkové
+aplikaci HiLex (viz èást \ref{HiLex}).
+
+\subsubsection*{lookAhead(LookAhead, Selector)}\vskip -3mm
+\index{módy parserù!\verb+lookAhead+}
+Posledním zástupcem této skupiny módù je \verb+lookAhead/2+.
+Ten udr¾uje ve svém parametru $LookAhead$ polo¾ku, která ve vstupním
+textu následuje --- je ve výhledu. Lze jej pou¾ívat napøíklad
+v~sekvenèních a~alternativních kompozicích pro øízení
+výpoètu. Podrobnì se budeme vìnovat tomuto tématu v~kapitole 
+\ref{DeterministickeKonstruktoryParseru}.
+
+
+\subsection{Globální urèení zpùsobu výpoètu}
+Jak bylo ji¾ døíve zmínìno, nejzajímavìj¹í je pro nás v~tomto 
+smìru kombinátor alternativní kompozice.
+
+\subsubsection*{alt(On, Selector)}\vskip -3mm
+\index{módy parserù!\verb+alt+}
+Je mód, který umo¾òuje globálnì ovlivòovat chování kombinátorù
+\verb+<:+ a~\verb+:>+. Jeliko¾ pøi pou¾ívání \verb+<:+ a~\verb+:>+
+mù¾e za urèitých okolností docházet ke ztrátám relevantních
+výsledkù, umo¾òuje tento mód zkrácené vyhodnocení zablokovat.
+V¹echny varianty kombinátoru alternativní kompozice se potom
+chovají jako \verb+<:>+~--- seznam úspì¹ných rozkladù tedy není oøezáván
+a~lze urèit, zda pou¾ití \verb+<:+ resp. \verb+:>+ bylo chybné
+èi ne. Parametr $On$ mù¾e být vázán buï na atom \verb+'ndet'+, který
+blokuje zkrácené vyhodnocení nebo \verb+'alt'+, je¾ zachovává výpoètu
+jeho pùvodní charakter.
+                         
+\subsubsection*{ll1/4 a~pseudoll1/4}\vskip -3mm
+Jsou módy, kterým je vìnována kapitola \ref{DeterministickeKonstruktoryParseru}.
+V~tìchto re¾imech bude mo¾né provádìt deterministickou syntaktickou
+analýzu resp. syntaktickou analýzu s~pou¾itím výhledù.
+
+
+
+\subsection{Pøenos a~distribuce dat s~globálním charakterem}
+Poslední skupina módù je urèena pro pøenos dat, která se vyu¾ívají
+v~prùbìhu výpoètu. Uká¾eme si také jak lze vytváøet 
+\emph{u¾ivatelské módy}.
+
+U¾ivatelský mód je re¾im parseru, jen¾ lze vytvoøit bez zásahu 
+do zdrojového kódu knihovny. Pro jeho zavedení je zásadní
+implicitní klauzule procedury \verb+item+:
+\begin{quote}\begin{verbatim}
+item(I+L):-
+        deBug(modewarn,['(item) Implicit mode selector:',I+L,nl]),
+        :-@ [I,L].
+\end{verbatim}\end{quote}
+Díky ní se v~pøípadì selektoru módu, který se neunifikoval
+s~¾ádnou z~klauzulí primitiva item volá predikát:
+\begin{quote}\begin{verbatim}
+:-@ [I,L]
+\end{verbatim}\end{quote}
+který jako první parametr dostává selektor módu ke kterému
+pøed zavoláním pøipojí parametr $L$, v~nìm¾ mù¾e být po návratu vydán
+seznam úspì¹ných rozkladù.
+
+Definice cílového predikátu je na tvùrci módu a~mù¾e být umístìna
+v~jeho zdrojovém kódu. Je na nìm, aby implementoval predikát, který
+má stejný funktor jako selektor a~o~$1$ vìt¹í aritu.
+
+\vskip 2mm\noindent
+Celý postup si uká¾eme na pøíkladu.
+
+\subsubsection*{Pøíklad:}\vskip -3mm
+Vytvoøíme mód \verb+encode/3+ pro pøekódování znakových sad:
+\begin{quote}
+$encode(+TermTable,+Input,-LOS)$
+\end{quote}
+kde $TermTable$ je predikát, který provádí pøekódování. Definujme
+tedy klauzuli u¾ivatelského módu:
+\begin{quote}\begin{verbatim}
+encode(TermTable,Input,L):-
+        item(Input+Li)
+        -> (Li=[N>R]
+            -> :-@[TermTable,R,RR],
+               L=[encode(TermTable,N)>RR]
+            ;  L=[]).
+\end{verbatim}\end{quote}
+Pou¾ití u¾ivatelského módu je naprosto stejné jako u~módù knihovních:
+\begin{quote}\begin{verbatim}
+?- encode(latin2Txt,s("tøásnì"))+L
+|      :-> tokenA("trasne").
+L= [encode(latin2Txt,s(""))>'trasne']
+Yes
+\end{verbatim}\end{quote}
+Pøi zavádìní nového módu je zpravidla nutné nejprve doplnit proceduru
+primitiva \verb+item+ tak, aby bylo mo¾né \uv{vybalovat} argumenty
+vnoøené v~selektoru nového módu. Jak jsme si ukázali v~této èásti, 
+takovou úpravu je mo¾no provést bez pøímého zásahu do kódu knihovny.
+Obvykle jsou v¹ak navíc doplnìny o~klauzule nového módu i~procedury dal¹ích 
+konstruktorù a~zde se ji¾ bez zásahu do knihovních predikátù neobejdeme.
+Pouhé pou¾ití u¾ivatelského módu nemusí být v¾dy postaèující.
+
+
+
+\subsection{Skládání selektorù}
+Jednotlivé módy parserù lze rùznými zpùsoby kombinovat. Nové módy
+se z~ji¾ existujících vytváøejí vnoøováním selektorù. Uvnitø
+procedury, kde je pro daný mód urèeno specifikované chování pomocí
+explicitní klauzule, musí být selektor  módu v¾dy dostupný, aby
+jej bylo mo¾né detekovat. Napøíklad v~proceduøe primitiva
+\verb+item+ probíhá \uv{rozbalování} módù tak, by se primitivum
+dostalo a¾ k~selektoru vstupu.
+
+Z~toho plyne, ¾e selektory do sebe nelze vnoøovat libovolnì. Závislosti
+mezi  módy a~mo¾nosti jejich vzájemného vyu¾ívání obsahuje obrázek 
+\ref{ImgVnorovaniModu}, kde relace:
+\begin{quote}
+$X \rightarrow Y$
+\end{quote}
+urèuje, ¾e selektor $X$ mù¾e být vnoøen v~selektoru $Y$. Relace 
+$\rightarrow$ je tranzitivní.
+\begin{figure}
+\begin{center}
+ \input{images/modes.latex}
+\end{center}
+\caption{Vnoøování módù}
+\label{ImgVnorovaniModu}
+\end{figure}
+Pou¾ití slo¾eného selektoru tedy mù¾e vypadat takto:
+\begin{quote}\begin{verbatim}
+?- off(0,lineCol(1,1,prn(s("564e-2"))))+L 
+|       :-> double.
+5564eee-2
+L = [off(6, lineCol(1, 7, prn(s([]))))>5.64] 
+Yes
+\end{verbatim}\end{quote}
+Mód \verb+prn/1+ uvedený v~pøíkladu vypisuje do aktuálního výstupního
+proudu polo¾ky naèítané ze vstupu. Pøi analýze s~návratem tak napøíklad 
+lze získat pøibli¾nou
+pøedstavu o~tom, jak efektivnì je parserem vstupní text zpracováván.
+
+\section{Víceprùchodový rozklad}\label{VicepruchodovyRozklad}\index{víceprùchodový rozklad}\index{rozklad!víceprùchodový}
+V~této èásti se budeme vìnovat návaznosti lexikální a~syntaktické
+analýzy v~parserech. Jak ji¾ bylo zmínìno, obvykle tyto dvì fáze
+strukturální  analýzy textu splývají, ale v~nìkterých pøípadech
+si okolnosti vy¾adují pou¾ít nejprve \emph{scanner} a~a¾ na 
+jím pøedzpracovaný vstup aplikovat syntaktický analyzátor.
+
+Ve fázi syntaktické analýzy jsou potom  polo¾kami vstupního textu
+tokeny. Knihovní parsery terminálních symbolù jsou navr¾eny tak,
+aby bylo mo¾né s~takovou formou vstupu pracovat stejnì jako s~øetìzci.
+
+\subsubsection*{Pøíklad:}\vskip -3mm
+Nech» je vstupní text parseru tvoøen posloupností termù tvaru:
+\begin{quote}
+$Token > KlasifikaceTokenu$
+\end{quote}
+která byla vytvoøena \emph{scannerem}. Pøíkladem tokenu ze vstupu
+je:
+\begin{quote}
+\verb+"is" > tKeyword+
+\end{quote}
+Syntaktický analyzátor pracující nad takovým vstupem mù¾e pou¾ít 
+napøíklad parser \verb|symbol|:
+\begin{quote}
+\verb+symbol([_>tWhitespace])+
+\end{quote}
+pro akceptování \uv{prázdného znaku}. Staèilo pouze vyu¾ít toho, ¾e
+\verb|symbol| je parametrizován øetìzcem; dokonce lze rozklad provádìt
+v~rùzných módech promìnných. Analogicky lze pou¾ít parser \verb+token+:
+\begin{quote}
+\verb+token([_>tDirective, _>tDelimiter])+
+\end{quote}
+pro pøijmutí direktivy jazyka následované oddìlovaèem pøíkazù.
+
+\vskip 2mm
+\noindent
+Vý¹e uvedený zpùsob analýzy --- my¹len víceprùchodový rozklad, se pou¾ívá 
+zejména kdy¾ jsou vytváøeny parsery za bìhu, kdy nelze konzultovat
+kód pomocí nìho¾ by bylo mo¾né vytváøet nové módy (viz ní¾e).
+
+Pro tento úèel zavedeme kombinátor \verb+chainPassage+. V~prvním parametru
+dostává \emph{scanner}, jeho¾ úkolem je vytvoøit tokenizovaný vstupní 
+text nebo jej nìjakým zpùsobem pøedpøipravit.
+
+Jeho aplikací se získá vstup pro parser druhý, jeho¾
+seznam úspì¹ných rozkladù je nakonec vydán:\index{chainPassage@\verb+chainPassage+}
+\begin{quote}\begin{verbatim}
+?- W :-> prelex chainPassage lexer
+|                chainPassage strip
+|                 chainPassage synthPass
+|        <@ doSemantic.                  
+\end{verbatim}\end{quote}
+V~tomto pøíkladu jsme pou¾ili kombinátor \verb+chainPassage+ pro 
+zøetìzení tøí fází lexikální analýzy a~jedné fáze analýzy 
+syntaktické. Pomocí mutátoru \verb+<@+ lze nakonec provést
+sémantickou analýzu syntaktického stromu vydaného tímto víceprùchodovým
+parserem.
+
+Pou¾itelnost konstruktoru \verb+chainPassage+ v~pøípadech, kdy získáváme
+nebo dokonce konstruujeme parsery pro jednotlivé fáze za bìhu je zøejmá.
+Je¹tì si uká¾eme generátor \verb+multiPass+, který ze seznamu parserù
+zkonstruuje parser pro víceprùchodový rozklad. Pøedchozí úlohu by bylo
+mo¾né pomocí nìj øe¹it takto:\index{multiPass@\verb+multiPass+}
+\begin{quote}\begin{verbatim}
+?- multiPass([prelex,lexer,strip,synthPass],P),
+|  W :-> P <@ doSemantic.                      
+\end{verbatim}\end{quote}
+S~víceprùchodovým rozkladem se v~literatuøe vìnované konstruktorùm parserù
+ve funkcionálním programování mù¾eme setkat napøíklad ve Fokker 
+\cite{Fokker} a~Hutton \cite{Hutton}. Tento zpùsob øetìzení fází syntaktické
+analýzy pøenesený do na¹eho implementaèního jazyka si v¹ak ne zcela
+zachovává míru efektivity, kterou mìl právì ve funkcionálním svìtì, kde
+je vyu¾íván \uv{lazy} charakter jazyka.
+
+\vskip 3mm\noindent
+V~knihovnì konstruktorù parserù v¹ak mù¾eme tuto úlohu øe¹it jinak~--- 
+pomocí módù. Pou¾ijeme strukturu parseru, která se pou¾ívá bì¾nì
+tøeba pøi konstrukci pøekladaèù. \emph{Scanner} zde nezpracovává
+celý vstup najednou, ale je volán syntaktickým analyzátorem za úèelem 
+získání jednoho tokenu~--- lexikální analýza je spou¹tìna \uv{na ¾ádost}
+analýzy syntaktické. Zpracování vstupního textu má potom \uv{proudový
+charakter} a~pro zpracování vstupního textu postaèuje jediný prùchod.
+
+Lexikální analyzátor se implementuje jako u¾ivatelský mód, který
+je realizován parserem, jen¾ tokenizuje resp. transformuje vstupní
+text a~vydává jej do vy¹¹í vrstvy. Parser ve vy¹¹í vrstvì pak
+pracuje s~tokeny stejnì, jako jsme si to ukázali v~úvodu tohoto oddílu.
+Ze syntaktického stromu lze postradatelné tokeny, kterými jsou kupøíkladu
+závorky, snadno odstranit. O~tuto úlohu se mù¾ou postarat tøeba
+v~pøípadì \uv{prázdných znakù} a~komentáøù ji¾ \emph{scannery} a~parseru 
+tokeny tohoto typu vùbec nepøedávat. 
+
+Tímto zpùsobem lze také velmi snadno implementovat kontextovì 
+závislou syntaktickou analýzu. Parser mù¾e v~prùbìhu rozkladu 
+snadno støídat módy dle aktuálního kontextu 
+ve vstupním textu.
+
+Analyzátoru vytvoøenému pomocí módù tedy postaèuje jediný prùchod
+vstupním textem:
+\begin{quote}\begin{verbatim}
+?- strip(lexer(prelex(file(Position,Handle))))
+|       :-> synthPass <@ doSemantic.
+\end{verbatim}\end{quote}
+V~této èásti jsme si ukázali, jak s~pomocí módù odstranit
+nutnost víceprùchodového rozkladu pøi pou¾ití konstruktorù
+parserù, který byl pou¾it v~ostatních pracích
+vìnovaných tomuto tématu a~nahradit jej jednoprùchodovým
+analyzátorem, v~nìm¾ jednotlivé fáze prùbì¾nì spolupracují.
+
+\input{det}
+
+\endinput
+-------------------------------------------------------------------------------

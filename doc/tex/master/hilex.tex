@@ -1,0 +1,308 @@
+\section{HiLex}\label{HiLex}\index{HiLex}
+\emph{HiLex} je program urèený pro pøevádìní souborù se zdrojovými texty 
+do jejich HTML formy se syntax highlightingem. 
+Vhodný je pøedev¹ím pro zvý¹ení èitelnost fragmentù zdrojových textù 
+vkládaných do dokumentace vytváøené v~tomto formátu.
+
+Struktura vstupního textu a~po¾adovaný zpùsob zapouzdøení se specifikuje
+v~konfiguraèních souborech (dále jen \emph{.hlx} souborech), z~nich¾
+je vygenerován zapouzdøovaè tvoøený knihovními parsery a~konstruktory, 
+který je mo¾né buï pøímo aplikovat nebo ulo¾it pro pozdìj¹í pou¾ití.
+Jako pøíklady jsou k~programu pøilo¾eny ukázkové \emph{.hlx} soubory 
+se zapouzdøovaèi zdrojových textù pro jazyky Prolog, C/C++, Pascal, 
+Java a~rovnì¾ pro konfiguraèní soubory programu \emph{HiLex} samotné.
+
+Zpracování zdrojových textù se potom provádí buï po zavedení 
+vygenerovaného zapouzdøovaèe do interpretu Prologu nebo externì pou¾itím
+shellových skriptù spou¹tìjících SWI Prolog.
+
+\vskip 3mm\noindent
+U¾ivatelská dokumentace obsahuje specifikaci formátu \emph{.hlx} souboru
+a~struèný popis vstupního bodu programu. V~dal¹í èásti je struènì popsán 
+zpùsob implementace programu a~pou¾ití jednotlivých èástí knihovny.
+
+
+
+\subsection{U¾ivatelská dokumentace}
+Jak bylo zmínìno v~úvodu, je nutné pøed pou¾itím programu vytvoøit 
+konfiguraèní soubor~\emph{.hlx}. Proto se nejdøíve seznámíme s~jeho formátem.
+
+\subsubsection*{Soubor .hlx}\vskip -3mm
+Soubor \emph{.hlx} je textový soubor urèený pro specifikaci elementù
+pøípustných v~zapouzdøovaném textu. Jsou v~nìm popsány 
+jednak elementy vstupního souboru, dále je urèeno jakým zpùsobem je
+obalit a~koneènì jsou v~nìm také konfigurovány 
+dal¹í volby zapouzdøovacího procesu.
+
+Konfiguraèní soubor programu \emph{HiLex} se v¾dy skládá z~jednoho nebo více 
+blokù, mezi které je mo¾né vkládat komentáøe. Komentáø zaèíná znakem 
+\uv{dvojkøí¾} (\verb+'#'+) a~v¹e co za tímto znakem následuje a¾ po konec øádku 
+je jeho souèástí.
+
+\vskip 2mm
+\noindent
+Bloky obsahují pøíkazy provádìjící rùzná nastavení. Pøíkazy 
+mají tvar:
+\begin{quote}
+$Keyword = Value;$
+\end{quote}
+kde $Keyword$ je klíèové slovo a~$Value$ zpravidla øetìzcová hodnota.
+Øetìzce jsou posloupnostmi znakù uzavøených v~uvozovkách. 
+Znak \verb|'"'| uvnitø uvozovek lze získat pomocí zpìtného lomítka.
+Nyní si rozeberme strukturu jednotlivých blokù.
+
+
+
+\vskip 2mm
+\subsubsection*{Blok Setup}\vskip -3mm
+V~$Setup$ bloku se provádìjí globální nastavení zapouzdøovaèe. Na umístìní 
+a~poøadí $Setup$ bloku nezále¾í, stejnì jako na poøadí pøíkazù v~nich.
+Strukturu $Setup$  bloku lze vyjádøit takto:
+\begin{quote}
+$Setup(EncapsulatorName)$\\
+\verb+{+\\
+\verb+    +$Command_1$\\
+\verb+    +\dots\\
+\verb+    +$Command_n$\\
+\verb+}+
+\end{quote}
+Jméno zapouzdøovaèe $EncapsulatorName$ v~hlavièce bloku má pouze 
+informativní úlohu a~je pou¾íváno pouze ve fázi generování 
+zapouzdøovaèe pro vypisování stavových a~ladících informací. 
+V~dal¹ích fázích jej \emph{HiLex} ji¾ nepou¾ívá.
+V~tìle bloku mohou být pou¾ity následující pøíkazy:
+\begin{quote}
+ \begin{description}
+  \item \verb+Prefix=+$String$\verb+;+\\ 
+  \uv{hlavièka}~--- $String$ je øetìzec urèující text, jen¾ má 
+  pøedcházet zapouzdøenému textu.
+  \item \verb+Postfix=+$String$\verb+;+\\
+  \uv{patièka}~--- $String$ je øetìzec, který urèuje text následující 
+  za zapouzdøeným souborem ve vytváøené dokumentaci.
+ \end{description}
+\end{quote}
+
+
+
+\vskip 3mm
+\subsubsection*{Blok Element}\vskip -3mm
+Blok $Element$ urèuje strukturu a~zapouzdøení jedné tøídy elementù
+vstupního textu:
+\begin{quote}
+$Element(ElementName)$\\
+\verb+{+\\
+\verb+    +$Command_1$\\
+\verb+    +\dots\\
+\verb+    +$Command_n$\\
+\verb+}+
+\end{quote}
+Jméno $ElementName$ v~hlavièce bloku má význam jednak pro ètenáøe 
+konfiguraèního souboru~--- mìlo by charakterizovat tøídu 
+elementù, pro které je blok urèen, navíc musí být v~rámci konfiguraèního
+souboru jednoznaèné. Na poøadí {\tt Element} blokù zále¾í:
+\begin{quote}
+Pokud bude ve zdrojovém souboru jazyka C~nalezen element \verb+'for'+, mohl
+by být akceptován jako klíèové slovo i~jako identifikátor (situace tohoto
+typu jsme øe¹ili v~èásti \ref{ZkraceneVyhodnoceni}.
+
+Právì v~tomto pøípadì se uplatní poøadí $Element$ blokù v~\emph{.hlx} 
+souboru. Element bude obalen podle bloku, který 
+je v~\emph{.hlx} souboru uveden døíve~--- 
+podle bloku klíèového slova.
+\end{quote}
+Na poøadí pøíkazù uvnitø bloku nezále¾í. Element blok mù¾e obsahovat 
+následující pøíkazy~--- pokud nìkterý z~nich chybí je doplnìn standardní 
+hodnotou:
+\begin{quote}
+\noindent
+\verb+Descr=+$String$\verb+;+\\ 
+Je popis elementu pomocí varianty regulárních výrazù. Popis
+regulárních výrazù je obsahem následující èásti \ref{HiLexRegularniVyrazy}. 
+Tento pøíkaz se mù¾e v~jednom bloku vícekrát opakovat. 
+Pokud tomu tak je, jsou øetìzce spojeny v~poøadí,
+ve kterém jsou uvedeny v~\emph{.hlx} souboru.
+
+\noindent
+\verb+Font=+$String$\verb+;+\\
+$String$ obsahuje font, kterým má být element vypsán.
+
+\noindent
+\verb+Size=+$String$\verb+;+\\
+$String$ obsahuje velikost fontu, kterou má být element vypsán.
+
+\noindent
+\verb+Color=+$String$\verb+;+\\
+$String$ obsahuje barvu písma, kterou má být element vypsán.
+
+\noindent
+\verb+Underscore=+$Bool$\verb+;+\\
+Kde $Bool \in $\verb+{"TRUE", "FALSE"}+. Kdy¾ \verb+"TRUE"+, element bude podtr¾en, jinak ne.
+
+\noindent
+\verb+Italic=+$Bool$\verb+;+\\
+Kdy¾ \verb+"TRUE"+, element bude vypsán kurzívou, jinak ne.
+
+\noindent
+\verb+Bold=+$Bool$\verb+;+\\
+Kdy¾ \verb+"TRUE"+, element bude vypsán tuènì, jinak ne.
+
+\noindent
+\verb+RawBeg=+$String$\verb+;+\\
+Pokud uvedete tento pøíkaz, musí být také uveden pøíkaz \verb+RawEnd+. 
+V~tomto pøípadì se ostatní pøíkazy ignorují. Jde toti¾ o~pøímé nastavení
+obalení.
+$String$ obsahuje øetìzec, kterým bude element obalen 
+zleva.
+
+\noindent
+\verb+RawEnd=+$String$\verb+;+\\
+Pokud uvedete tento pøíkaz, musí být také uveden pøíkaz \verb+RawBeg+. 
+V~tomto pøípadì se ostatní pøíkazy ignorují. 
+$String$ obsahuje øetìzec, kterým bude element obalen zprava.
+\end{quote}
+
+
+
+\subsubsection*{Regulární výrazy}\vskip -2mm\label{HiLexRegularniVyrazy}
+Regulární výraz je \emph{¹ablona}, která popisuje mno¾inu øetìzcù.
+Regulární výrazy jsou konstruovány pou¾íváním rùzných operátorù, 
+které kombinují jednodu¹¹í výrazy a~vytváøejí tak výrazy slo¾itìj¹í.
+V~\emph{.hlx} souboru se pou¾ívají v~$Element$ bloku v~pøíkazech 
+\verb+Descr+.
+
+Základním stavebním kamenem je regulární výraz, který
+odpovídá jednomu znaku. Vìt¹ina znakù, vèetnì písmen a~èíslic
+jsou regulární výrazy, které odpovídají sami sobì. Pøipraveny
+jsou následující metaznaky:
+\begin{quote}
+ \begin{tabular}{llp{11cm}}
+  \verb|.|&\dots& jakýkoli znak kromì \verb|\n|.\\
+  \verb|\n|&\dots& nová øádka.\\
+  \verb|\t|&\dots& horizontální tabulátor.\\
+  \verb|\r|&\dots& znak \uv{návrat vozíku} CR (0x0d).\\
+  \verb|\e|&\dots& ESC (0x1B).\\
+  \verb|\s|&\dots& libovolný \uv{prázdný znak} (CR,LF,tab,space).\\
+  \verb|\S|&\dots& znak rùzný od \verb|\s|.\\
+  \verb|\l|&\dots& malá písmena \verb|a-z|.\\
+  \verb|\u|&\dots& velká písmena \verb|A-Z|.\\
+  \verb|\w|&\dots& \verb|\l| a~\verb|\u|.\\
+  \verb|\d|&\dots& èíslice.\\
+  \verb|\D|&\dots& znak, který není èíslicí.\\
+  \verb|\a|&\dots& èíslice nebo \verb|\w|.\\
+  \verb|\x00;|&\dots&  znak s~danou hexadecimální hodnotou.\\
+  \verb|\i000;|&\dots& znak s~danou decimální hodnotou.\\
+  \verb|\o000;|&\dots& znak s~danou octa hodnota.\\
+  \verb|\X|&\dots&  znaèí pou¾ití v~pùvodním významu, kde X~je kterýkoli 
+  		    znak s~výjimkou vý¹e uvedených.
+ \end{tabular}
+\end{quote}
+Dal¹ím typem regulárních výrazù jsou seznamy znakù, které jsou
+uzavøeny mezi \verb+'['+ a~\verb+']'+. Takovému
+regulárnímu výrazu potom odpovídá kterýkoli znak obsa¾ený v~uvedeném
+výètu. Pokud je prvním znakem uvedeným v~seznamu \verb+'^'+,
+význam se obrací a~jsou pøípustné právì ty znaky, které obsa¾eny
+v~seznamu nejsou. Napøíklad:
+\begin{quote}
+ \begin{tabular}{llp{11cm}}
+  \verb|[abc]|&\dots& znak a, znak b~nebo znak c.\\
+  \verb|[a-c]|&\dots& toté¾ co pøedchozí.\\
+  \verb|[^c]|&\dots& jakýkoli znak kromì c.\\
+  \verb|[a-c\\Hl-r]|&\dots& znaky a~a¾ c, zpìtné lomítko, H~a~l~a¾ r.
+ \end{tabular}
+\end{quote}
+Vìt¹ina metaznakù uvedených v~prvním pøehledu ztrácí
+v~seznamu svùj speciální význam (v¹echny kromì \verb+\t+ a~\verb+\n+).
+Pùvodní význam \verb+'['+ èi \verb+'^'+ lze, stejnì jako v~ostatních
+pøípadech, získat pomocí zpìtného lomítka.
+Regulární výrazy mohou být následovány nìkterým z~následujících
+operátorù pro iterace:
+\begin{quote}
+ \begin{tabular}{llp{11cm}}
+  \verb|?|&\dots& pøedcházející  znak se mù¾e, ale nemusí vyskytnout.\\
+  \verb|*|&\dots& pøedcházející  znak se vyskytnout nemusí nebo se 
+ mù¾e vyskytnou jednou a~vícekrát.\\
+  \verb|+|&\dots& pøedcházející znak se vyskytne jednou nebo vícekrát.
+ \end{tabular}
+\end{quote}
+Regulární výrazy lze øetìzit. Výsledný regulární výraz
+odpovídá zøetìzení øetìzcù odpovídajících jednotlivým
+regulárním výrazùm. Dva regulární výrazy mohou být rovnì¾ spojeny 
+infixním operátorem \verb+'|'+, který má význam jejich alternativní 
+kompozice. Operátory iterace mají ni¾¹í precedenci,
+ne¾ operátor alternativní kompozice. Ve výrazech lze pro explicitní 
+zmìnu precedence rovnì¾ pou¾ít závorky \verb+'('+ a~\verb+')'+.
+
+
+\subsubsection*{Predikáty}\vskip -2mm
+Program lze konfigurovat pomocí voleb ve struktuøe \verb+hlxOptionIs/2+.
+Bìhovou nápovìdu poskytuje predikát \verb+hilex/0+. Prvním ze dvou
+vstupních bodù programu je predikát \verb|hilex/2|:
+\begin{quote}
+$hilex(+FileHlx,+FileCoc)$
+\end{quote}
+který podle konfiguraèního souboru $FileHlx$ vygeneruje zapouzdøovaè
+do souboru $FileCoc$.
+
+\vskip 2mm
+\noindent
+Druhým z~nich je \verb|hilex/3|:
+\begin{quote}
+$hilex(+LanguagueOrCoconizerFile,+InputFile,+OutputFile)$
+\end{quote}
+provádìjící zapouzdøování. Ten pøevede zdrojový soubor $InputFile$ do HTML 
+pomocí zapouzdøovaèe $LanguagueOrCoconizerFile$ a~výsledek ulo¾í do 
+souboru $OutputFile$. Pokud je parametr $LanguagueOrCoconizerFile$ vázán 
+na jeden z~atomù: \verb+'prolog'+, \verb+'cpp'+, \verb+'hilex'+, \verb+'pascal'+
+nebo \verb+'java'+, je pou¾it pøipravený zapouzdøovaè. V~opaèném
+pøípadì se pøedpokládá, ¾e je argument vázán na cestu
+k~souboru \emph{.coc}, který zapouzdøovaè obsahuje nebo na
+konfiguraèní soubor \emph{.hlx}.
+
+
+
+\subsection{Implementace}\label{HiLexImplementace}
+\emph{HiLex} je program, který:
+\begin{enumerate}
+\item Generuje zapouzdøovaèe.
+\item Zpracovává pomocí zapouzdøovaèù vstupní texty.
+\end{enumerate}
+
+\subsubsection*{Generování zapouzdøovaèe}\vskip -2mm
+Zapouzdøovaè je parser, jeho¾ výstupem je zdrojový text
+zpracovaný dle specifikace dané konfiguraèním souborem.
+Pro daný typ vstupního textu je konstruován podle \emph{.hlx} souboru. 
+Je provedena lexikální, syntaktická a~sémantická analýza, jejich¾
+výsledkem jsou akceptory vygenerované z~regulárních výrazù v~nìm obsa¾ených. 
+Parsery zkonstruované podle jednotlivých $Element$ blokù jsou spojeny 
+a~jejich kompozicí je vytvoøen zapouzdøovaè sestavený z~knihovních 
+konstruktorù.
+
+Proto¾e má generování zapouzdøovaèe \uv{offline} charakter, lze provést
+jeho optimalizaci, aby bylo jeho následné pou¾ití efektivnìj¹í.
+Optimalizace, kterou provádí knihovní predikát 
+\verb+optimizeRegExprParser/4+, je rekurzivní a~spoèívá pøedev¹ím
+v~transformaci kombinátorù alternativní kompozice, jak bylo popsáno
+v~èásti \ref{ParserySVyhledem}. Rozkladové tabulky, které jsou
+v~tìchto parserech vytváøeny v~dobì analýzy vstupního textu,
+optimalizátor konstruuje abstraktní interpretací
+parseru a~jejich vhodnou reprezentací nahradí pùvodní kód. Výsledný
+parser ve formì termu je ulo¾en do souboru \emph{.coc}.
+
+\subsubsection*{Zapouzdøování}\vskip -2mm
+Zoptimalizovaný parser urèený pro zapouzdøování je zaveden
+ze souboru do interpretu. Zpracování vstupního textu se
+provádí nedeterministicky, ov¹em v~módu \verb+pseudoll1/4+ 
+(viz \ref{ParserySVyhledem}). Mód \verb+pseudoll1/4+ má navíc 
+vnoøen selektor \verb+off/2+ 
+(viz \ref{ModOffset}), který udr¾uje informaci o~pozici ve
+vstupním textu. Tato informace se pou¾ívá pro oøezávání
+seznamu úspì¹ných rozkladù mutátorem \verb+<^>+ (viz \ref{<b>}).
+Pro zachycení precedence akceptorù regulárních výrazù dle specifikace
+dané \emph{.hlx} souborem jsou pou¾ity kombinátory alternativní
+kompozice s~èásteèným vyhodnocením (viz \ref{ZkraceneVyhodnoceni}),
+které si v~tomto módu zachovávají svùj pùvodní význam.
+Zapouzdøovaè má charakter filtru. Dílèí výsledky jsou vypisovány
+do standardního výstupního proudu, který je pøesmìrován do souboru.
+
+\endinput
+-------------------------------------------------------------------------------

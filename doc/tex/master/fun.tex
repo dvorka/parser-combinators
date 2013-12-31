@@ -1,0 +1,226 @@
+\section{Aplikace z~funkcionálního svìta}\label{AplikaceZFunkcionalnihoSveta} 
+Programování vy¹¹ího øádu je vlastní programování funkcionálnímu. 
+V~pøedchozích èástech jsme zavedli dostateènou podporu v~rámci
+na¹eho implementaèního jazyka, kterým je Prolog. 
+
+Tato podpora bude pou¾ita jako základní prostøedek pøi konstrukci
+parserù. Byla by v¹ak ¹koda nevyu¾ít v¹ech mo¾ností, je¾ nám
+otevírá. V~této èásti tedy definujeme predikáty, které jsou ekvivalenty
+osvìdèených funkcionálù, o~jejich¾ u¾iteènosti nás pøesvìdèili
+funkcionální programátoøi.
+
+Existuje øada témìø standardních operací se seznamy, které jsou
+definovány s~dostateènou obecností, tak¾e se na jejich základì dá
+snadno vyjádøit øada predikátù. V~definici tìchto standardních operací
+se sice vyu¾ívá rekurzivní zpracování seznamù, ale pokud jsou
+predikáty definovány vhodným zpùsobem, je jejich provedení efektivní
+díky optimalizacím, je¾ jsou bì¾nou souèástí moderních interpretù
+jazyka Prolog. To vede k~efektivním a~snadno èitelným programùm. Tyto
+predikáty mají ve vìt¹inì pøípadù za argumenty jiné predikáty, tak¾e
+se oznaèují jako predikáty vy¹¹ího øádu.
+
+% TAIL RECURSION
+
+\subsubsection{Predikát mapList}\vskip -3mm\index{mapList@{\tt mapList}}
+Velmi èasto potøebujeme provést se v¹emi prvky seznamu stejnou operaci~--- 
+aplikovat na nì stejnou funkci, a~z~takto získaných výsledkù
+vytvoøit opìt seznam. Takové zpracování umo¾ní predikát vy¹¹ího øádu
+\verb|mapList/3|. 
+
+Predikát \verb|mapList(+Fun, +InputList, -OutputList)| pøedpokládá, ¾e
+$Fun$ je predikát arity $n\ge 2$ a~$InputList$ seznam. Výstupní
+argument $OutputList$ je seznam stejné délky jako $InputList$, jeho¾
+$i$-tý èlen $O_i$ je získán voláním predikátu $Fun$ s~$n-1$-ním
+argumentem $I_i$ a~$n$-tým argumentem $O_i$, kde $I_i$ je $i$-tý èlen
+seznamu $InputList$. Definujme tedy predikát \verb|mapList/3| následovnì:
+\begin{quote}\begin{verbatim}
+mapList(Fun,[IH|IT],[OH|OT]):-
+        :-@ [Fun,IH,OH],
+        mapList(Fun,IT,OT).
+mapList(_,[],[]).
+\end{verbatim}\end{quote}
+Jeho pou¾ití ilustruje následující jednoduchý pøíklad:
+\begin{verbatim}
+?- mapList(append("Surname: "),["Kowalski","Warren"],R).
+R = ["Surname: Kowalski","Surname: Warren"]
+Yes
+\end{verbatim}
+
+
+
+\subsubsection{Predikát filter}\vskip -3mm\index{filter@{\tt filter}}
+Predikát vy¹¹ího øádu \verb|filter/3| testuje v¹echny prvky zadaného
+seznamu pomocí stejného predikátu a~do výsledného seznamu vlo¾í jen ty
+prvky, které splòují danou podmínku. Provádí tedy klasickou filtraci:
+\begin{quote}\begin{verbatim}
+filter(Cond,[IH|IT],Filtered):-
+        (:-@ [Cond,IH]
+          -> Filtered=[IH|OT]
+          ;  Filtered=OT),
+        filter(Cond,IT,OT).
+filter(_,[],[]).
+\end{verbatim}\end{quote}
+Predikát \verb|filter(+Cond, +Input, -Filtered)| pøedpokládá,
+¾e $Cond$ je predikát arity $a\ge 1$ a~$Input$ seznam. Výstupní
+argument $Filtered$ je seznam, který je vytvoøen z~tìch èlenù
+seznamu $Input$, které splòují podmínku $Cond$. Pøíklad:
+\begin{quote}\begin{verbatim}
+?- filter(isOdd,[1,2,3],R).
+R = [1,3]
+Yes
+\end{verbatim}\end{quote}
+
+
+
+\subsubsection{Predikát zip}\vskip -3mm\index{zip@{\tt zip}}
+Dal¹í relativnì obecnou operací se seznamy je spojit dva stejnì dlouhé
+seznamy do jediného tak, ¾e se na stejnolehlé prvky aplikuje daný
+predikát a~jím vydaná hodnota se umís»uje na pøíslu¹né místo ve výsledném
+seznamu:
+\begin{quote}\begin{verbatim}
+zip(Pred,[IH1|IT1],[IH2|IT2],[OH|OT]):-
+         :-@ [Pred,IH1,IH2,OH],
+         zip(Pred,IT1,IT2,OT).
+zip(_,_,[],[]).
+zip(_,[],_,[]).
+\end{verbatim}\end{quote}
+Je zøejmé, ¾e \verb|zip(+Fun, +List1, +List2, +OutList)| aplikuje predikát
+$Fun$ nejprve na oba první prvky a~pak rekurzivnì opakuje stejnou
+operaci pro zbytky obou seznamù. Pokud jsou seznamy rùznì dlouhé,
+\verb|zip/4| vrátí seznam s~délkou krat¹ího z~nich.
+
+A~jeden pøíklad pou¾ití predikátu \verb|zip/4|:
+\begin{quote}\begin{verbatim}
+?- zip(+,[1,2,3],[4,5,6],R).
+R = [5,7,9]
+Yes
+\end{verbatim}\end{quote}
+
+
+
+\subsubsection{Predikáty foldL a~foldR}\vskip -3mm\index{foldL@{\tt foldL}}
+V~tomto odstavci si uká¾eme mo¾nost jak vytvoøit obecný predikát,
+který je schopen opakovanì aplikovat binární operaci na prvky seznamu 
+a~její výsledky postupnì akumulovat. Proto¾e je tøeba rozli¹it, zda se má
+daná binární operace asociovat zleva nebo zprava, k~vyjádøení této
+akumulované aplikace na prvky seznamù slou¾í dva predikáty vy¹¹ího
+øádu \verb|foldL/4| a~\verb|foldR/4|. 
+
+Predikát \verb|foldL(+Fun, +List, +IniAcc, -Acc)|, kde $Fun$ je název
+predikátu arity $a\ge 3$ a~$List$ je seznam s~$n$ polo¾kami, provádí
+akumulovaný prùchod seznamu zleva s~postupnou aplikací $Fun$. Radìji
+ne¾ slovnì vyjádøíme jeho výsledek schematicky a~to takto:
+\begin{center}
+\verb|foldL(f,i,[a1,a2,...,an],X)| $\rightarrow$ \verb|X=f(...(f(f(i,a1),a2)...),an)| 
+\end{center}
+kde $i$ je obvykle levou jednotkou vzhledem k~operaci $f$.
+
+Samotný predikát je implementován pomocí akumulátoru:
+\begin{quote}\begin{verbatim}
+foldL(F,InVal,[I|IT],Out):-
+        :-@ [F,InVal,I,OutVal],
+        foldL(F,OutVal,IT,Out).
+foldL(_,Out,[],Out).
+\end{verbatim}\end{quote}
+
+\noindent\index{foldR@{\tt foldR}}
+Predikát \verb|foldR(+Fun, +List, +IniAcc, -Acc)| má stejné argumenty
+jako \verb|foldL/4|. Aplikuje v¹ak danou operaci s~levou asociativitou:
+\begin{center}
+\verb|foldR(f,i,[a1,a2,...,an],X)| $\rightarrow$ \verb|X=f(a1,f(a2,...,f(an,i)...))| 
+\end{center}
+kde $i$ je stejnì jako minule obvykle pravá jednotka vzhledem k~operaci $f$.
+\begin{quote}\begin{verbatim}
+foldR( F, InVal, [I|IT], Out ):-
+        foldR( F, InVal, IT, OutVal ),
+        :-@ [F,I,OutVal,Out].	
+foldR( _, InVal, [], InVal ).
+\end{verbatim}\end{quote}
+
+
+
+\subsubsection{Predikát $=$$-$$>$}\vskip -3mm\index{=->@\verb|=->|}
+Vytváøení predikátù vy¹¹ího øádu v~této èásti uzavøeme zkonstruováním
+\verb|=->/4| pro øetìzené volání. Tento predikát odpovídá skládání
+funkcí, jak jej známe z~funkcionálního programování. Proto¾e v~na¹em
+implementaèním jazyce nepracujeme s~funkcemi, ale
+s~predikáty, stanovme úmluvou, ¾e \uv{funkèní hodnota} bude vydávána 
+v~posledním argumentu.
+
+\verb|=->/4| je definován jako infixní operátor s~pravou asociativitou a~lze 
+jej pou¾ít nejen spoleènì s~vý¹e zavedenými predikáty vy¹¹ího øádu, 
+ale rovnì¾ s~kterýmikoli jinými predikáty vyhovujícími úmluvì:
+\begin{quote}\begin{verbatim}
+=->(P1,P2,I,O):-
+        :-@ [P2,I,Ot],
+        :-@ [P1,Ot,O].
+\end{verbatim}\end{quote}
+Nejdøíve je zavolán cíl $P2$. Jeho poslední argument, jen¾ obsahuje výsledek,
+je pøipojen k~argumentùm termu $P1$. Výsledek volání takto vzniklého cíle
+je koneènì pøedán na výstup~--- je to výsledek zøetìzeného volání predikátù
+$P2$ a~$P1$.
+
+\vskip 5mm
+\subsubsection*{Pøíklady}\vskip -3mm
+Na závìr této èásti si uka¾me tøi pøíklady pou¾ití vý¹e definovaných 
+predikátù, díky nim¾ mù¾eme nyní i~v~Prologu plnì vyu¾ívat výhod
+programování vy¹¹ího øádu:
+
+\vskip 3mm
+\verb+mapList+ aplikuje na podseznamy seznamu \verb+[[5,6,7],[8,9]]+ predikáty 
+\verb+zip/4+ a~\verb+filter/3+ slo¾ené pomocí \verb+=->/4+. Nejprve 
+\verb+zip/4+ 
+spojí zpracovávaný podseznam s~\verb+[1,2,3]+ pomocí operace \verb+*/3+ a~ze 
+získaného výsledku potom \verb+filter/3+ odstraní sudá èísla:
+\begin{quote}\begin{verbatim}
+?- :-@ [mapList(filter(isOdd) =-> zip(*,[1,2,3])),
+|       [[5,6,7],[8,9]],
+|       R].
+R= [[5, 21], []]
+Yes.
+\end{verbatim}\end{quote}
+
+\vskip 2mm
+\noindent
+Druhý pøíklad je zajímavìj¹í --- vyu¾ívá se v~nìm curryfikace.
+\verb+=->/4+ skládá predikáty \verb+foldR/4+ a~\verb+mapList/3+. Vstupní argument 
+\verb+[[0,1],[2]]+ je nejdøíve \uv{narovnán} voláním \verb+foldR/4+ s~pou¾itím
+\verb+append/3+ a~iniciální hodnoty \verb+[]+. Na prvky takto získaného seznamu 
+\verb+[0,1,2]+ pak \verb+mapList/3+ provede èásteènou aplikaci 
+operace \verb|+/3|. Vyhodnocení by probìhlo pouze v~pøípadì, pokud by byly 
+doplnìny i~zbývající parametry operace \verb|+/3|:
+\begin{quote}\begin{verbatim}
+?- :-@ [mapList(+) =-> foldR(append,[]),[[0,1],[2]],R].
+R= [+(0), +(1), +(2)]
+Yes
+\end{verbatim}\end{quote}
+
+
+\vskip 2mm
+\noindent
+Poslední pøíklad ukazuje cíl, který by pøi obvyklém volání skonèil
+chybou nebo selháním, díky curryfikaci v¹ak probìhne úspì¹nì:
+\begin{quote}\begin{verbatim}
+?- foldR(append =-> mapList(+(3)),[],[[3],[5,6]],R).
+R = [6, 8, 9] 
+Yes
+\end{verbatim}\end{quote}
+Ke ka¾dému prvku v~seznamu seznamù se pøiète èíslo 3 a~výsledné seznamy 
+se spojí do jednoho. Bez curryfikace by do¹lo k~chybì, proto¾e bìhem 
+výpoètu je volán cíl \verb+=->/5+, který není definován:
+\begin{quote}\begin{verbatim}
+:-@ [append =-> mapList(+(3)), [5,6], [], R]
+\end{verbatim}\end{quote}
+Výpoèet v¹ak skonèí úspì¹nì, nebo» jsou parametry pøidávány postupnì 
+a~ne najednou.
+
+% foldR vyhodnocuje zprava
+
+\vskip 7mm
+Tím jsme si ukázali pro ná¹ úèel nejdùle¾itìj¹í predikáty vy¹¹ího
+øádu. Uzavøeme tuto kapitolu konstatováním, ¾e knihovna kombinátorù
+obsahuje i~dal¹í, jen¾ nejsou popsány v~textu práce~--- v~pøípadì zájmu 
+mù¾ete nahlédnout do zdrojových textù.
+
+\endinput
+-------------------------------------------------------------------------------

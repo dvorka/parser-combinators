@@ -1,0 +1,173 @@
+\chapter*{Pøedmluva}\label{Predmluva}
+\setcounter{page}{1}
+Ji¾ od doby vzniku prvních poèítaèù je práce s~jejich programovým
+vybavením nerozluènì spojena s~pou¾íváním umìlých jazykù. I~dnes se 
+v~této oblasti setkáváme s~umìlými jazyky témìø na ka¾dém kroku. 
+Poèínaje jazyky pro popis struktury dat a~formátu textových dokumentù 
+pøes mno¾ství rùzných programovacích jazykù a¾ po øídící jazyky 
+operaèních systémù.
+
+Vlastnost, která má z~hlediska jejich praktického pou¾ívání nejvìt¹í
+význam, je mo¾nost jejich efektivního a~zároveò srozumitelného popisu.
+Jedním z~prostøedkù, který umo¾òuje dostateènì pøesný popis v¹ech 
+jazykových konstrukcí jazyka, konkrétnì v¹ech jeho syntaktických 
+struktur, je gramatika.
+
+V~rámci teoretického zkoumání gramatik a~jazykù byly tyto rozdìleny
+do tøíd a~ukázalo se, ¾e pro jednotlivé tøídy gramatik existují 
+tøídy automatù tak, ¾e pro danou gramatiku lze sestrojit automat, 
+který popisuje stejný jazyk. Z~hlediska praktické pou¾itelnosti
+mají nejvìt¹í význam bezkontextové jazyky~--- 
+jazyky generované gramatikami typu 2 v~Chomského hierarchii, 
+a~proto se budeme vìnovat pøedev¹ím jim.
+
+Gramatika je deklarativní popise jazyka. Pro jeho zpracování 
+se obvykle pou¾ívá vhodnìj¹í procedurální popis ve formì automatu. Vztah 
+mezi automaty a~gramatikami pak umo¾òuje pro danou gramatiku 
+sestrojit automat provádìjící syntaktickou analýzu
+jazyka, jen¾ generuje~--- parser.
+
+Parser je program, jeho¾ vstupem je lineární text. Úkolem parseru je
+provést jeho analýzu~--- lexikální a~syntaktický rozklad na jednotlivé
+komponenty a~jejich syntézu. Výsledek své práce vydává parser ve formì vhodné datové
+struktury reprezentující strukturu daného textu, kterou je zpravidla
+jistá forma syntaktického stromu.
+
+Parsery jsou obvykle vytváøeny buï pomocí automatizovaných konstruktorù
+nebo ruènì. V~prvním pøípadì tvùrce parseru pou¾ívá deklarativní
+popis jazyka, zatímco pøi ruèním vytváøení popis procedurální. U~obou
+pøístupù je práce na stranì programátora prakticky stejná, li¹í se
+v¹ak ve zpùsobu, jím¾ je získán funkèní parser.
+
+Pøi teoretickém zkoumání struktury problému vytváøení konstruktorù 
+parserù bezkontextových jazykù bylo pro jejich èást ji¾ dosa¾eno takových 
+výsledkù, ¾e na základì známých podkladù 
+je v~souèasné dobì napsání programu pro tento úèel rutinní zále¾itostí 
+nevy¾adující ji¾ témìø ¾ádné programátorské invence. Také proto je 
+zpravidla pou¾íván první z~vý¹e uvedených  zpùsobù --- parsery jsou 
+konstruovány pomocí speciálních nástrojù obvykle nazývaných 
+\uv{generátory parserù}. Ve svìtì imperativních programovacích
+jazykù je asi nejznámìj¹ím a~rovnì¾ nejpou¾ívanìj¹ím programem \emph{bison},
+jen¾ spoleènì s~generátorem lexikálních analyzátorù \emph{flex} tvoøí 
+velmi silný nástroj.
+
+Také ve funkcionálním programování se mù¾eme setkat s~mno¾stvím generátorù
+parserù. Za v¹echny jmenujme alespoò \emph{Ratatosk}~\cite{GoferG}, 
+\emph{Happy}~\cite{HaskellG} a~\emph{ml-lex}/\-\emph{ml-yacc}~\cite{{SML/NJY}}.
+
+Druhou mo¾ností, jak lze parsery konstruovat, je jejich \uv{ruèní} vytváøení.
+Témìø ka¾dý, kdo pou¾ívá rekurzivní techniky pøi programování v~imperativních
+jazycích, se nìkdy setkal s~programátorskou technikou nazývanou 
+\uv{recursive descent parsing}. Je to metoda syntaktické analýzy 
+provádìjící rozklad vstupního textu shora dolù pomocí mno¾iny rekurzivních 
+procedur. S~ka¾dým neterminálním
+symbolem gramatiky je pak asociována procedura a~zpùsob vzájemného 
+volání jednotlivých procedur je dán samotnou gramatikou.
+
+Do této kategorie lze zaøadit také zpùsob vytváøení parserù, který si 
+získal v¹eobecnou
+oblibu v~\uv{lazy} funkcionálních jazycích. Parsery jsou zde modelovány
+velmi pøirozenì pøímo jako funkce. Vìt¹í parsery jsou vytváøeny
+po èástech z~parserù men¹ích pomocí funkcionálù. Tyto funkce
+vy¹¹ího øádu jsou zde obvykle nazývány \uv{kombinátory parserù}. Kombinátorový
+rozklad je v~mnoha smìrech silnìj¹í ne¾ bì¾nì pou¾ívané metody. Umo¾òuje
+pracovat s~nejednoznaènými gramatikami s~mo¾ností backtrackingu v~pøípadech,
+které si to vy¾adují~--- ov¹em se v¹emi dùsledky na efektivitu takto 
+provedeného parsingu.
+Vytváøení parserù tímto zpùsobem je velmi rychlé a~navíc je výsledný 
+zdrojový text snadno pochopitelný a~modifikovatelný. 
+
+Dobrým úvodem do kombinátorového vytváøení parserù je Hutton \cite{Hutton}
+a~Fokker \cite{Fokker}, pou¾ití funkcionálních monád je celkem podrobnì 
+rozebráno v~Hutton \verb|&| Meijer \cite{Meijer} a~deterministickým 
+kombinátorùm je vìnována práce Swierstra \verb|&| Duponcheel \cite{Swierstra}.
+                              
+Diplomová práce pøedstavuje vý¹e zmínìné kombinátory parserù jako
+elegantní techniku pro vytváøení parserù. Budeme se vìnovat 
+pøenesení této my¹lenky do jazyka Prolog, který je nejroz¹íøenìj¹ím 
+jazykem logického programování. Vyjdeme pøitom ze základu polo¾eného 
+v~práci Hric~\cite{Hric}. Hlavním cílem této práce bude vytvoøení knihovny 
+parserù a~jejich konstruktorù, která by umo¾òovala tvorbu syntaktických 
+analyzátorù urèených pøedev¹ím pro zpracování umìlých jazykù. 
+Pokusíme se také navrhnout lep¹í syntaxi pro podporu
+programování vy¹¹ího øádu a~pøenést dal¹í techniky, je¾
+se osvìdèily ve svìtì funkcionálního programování.
+
+% indentace
+
+Pøedlo¾enou práci je mo¾no zhruba rozdìlit do pìti èástí. 
+ První èást tvoøí kapitola~1 vìnovaná programování vy¹¹ího øádu ---
+pøehlednému a~úspornému programátorskému stylu, na jeho¾ základì byla
+knihovna vytvoøena. V~této èásti jsou té¾ vytvoøeny prakticky pou¾itelné 
+predikáty pøevzaté z~funkcionálního programování.
+ Kapitola~2 pøedstavuje jádro knihovny, jím¾ jsou kombinátory, 
+mutátory a~generátory parserù.
+ V~tøetí èásti, která se skládá z~kapitol~3, 4~a~5, jsou vytvoøeny
+konstruktory parserù pro typické úlohy syntaktické analýzy. 
+ Kapitola 6 a~7 se vìnuje módùm parserù a~jejich hlavní aplikaci, kterou
+jsou deterministické konstruktory parserù.
+ A~koneènì kapitola~8 ukazuje na dvou praktických úlohách pou¾ití 
+knihovny.
+ V~pøílohách je k~dispozici dokumentace ladícího nástroje a~pøehled 
+definovaných operátorù. 
+
+Nedílnou souèástí diplomové práce je implementace knihovny, její
+referenèní pøíruèka a~ukázkové programy v~elektronické podobì. 
+
+Ve fragmentech zdrojových kódù v~textu práce je kladen dùraz spí¹e 
+na eleganci --- naopak knihovna samotná je implementována se snahou 
+o~co nejvìt¹í efektivitu, a~proto si v~nìkterých pøípadech tuto 
+eleganci nezachovává. Vnitøní definice predikátù v~textu práce a~v~kódu 
+knihovny se tak v~nìkterých pøípadech li¹í, jejich rozhraní je v¹ak 
+identické. 
+
+\newpage
+\section*{Úmluvy znaèení}\label{UmluvyZnaceni}
+Jak v~dal¹ím textu, tak v~pøilo¾ených zdrojových souborech s~implementací
+knihovny budou pou¾ívány následující úmluvy.
+
+Pro lep¹í èitelnost jsou vstupy, výstupy a~fragmenty zdrojových kódù
+v~textu práce editovány. Øetìzce jsou v~jazyce Prolog reprezentovány 
+jako seznamy 
+ASCII kódù znakù a~interprety je zpravidla také vypisují v~této formì.
+Proto jsou v~textu a¾ na výjimky nahrazeny èitelnìj¹ím výpisem 
+v~uvozovkách. Napøíklad øetìzec \verb|[98,117,103]| je zamìnìn za 
+\verb|"bug"|. V~pøípadì jednotlivých znakù jsou ASCII kódy nahrazeny
+výpisem v~\verb|O'| konvenci. Napøíklad ASCII kód \verb|97| je zamìnìn za 
+\verb|O'a|.
+
+Ve víceslovných názvech promìnných zaèínají nová slova výhradnì velkým
+písmenem. Napøíklad \verb|dbgCheckBreak| --- nikoli \verb|dbg_Check_Break|.
+Dále je v~komentáøích pou¾ívána konvence bì¾ná pro popis módù promìnných:
+
+\vskip -3mm
+\hskip 5mm
+\vbox{
+\begin{tabbing}
+xxxxx \= xxxxxxxxxxxxxxxxxxx \kill
+$+$
+ \>\dots vstupní parametr\\     		% promìnná musí být vázána
+$-$
+ \>\dots výstupní parametr\\                    % promìnná musí být volná
+$?$
+ \>\dots vstupnì výstupní parametr\\            % na vazbì promìnné nezále¾í
+\end{tabbing}
+}
+
+\vskip -1cm
+\noindent
+Bì¾né názvy promìnných jsou zavádìny v~prùbìhu textu.
+
+Víceslovné názvy predikátù jsou vytváøeny stejnì jako názvy promìnných.
+Názvy pomocných predikátù tvoøené posloupností písmen a~èíslic jsou 
+odli¹eny pøipojením \uv{podtr¾ítka} (napøíklad \verb|predicate_|).
+V~pøípadì názvu vytvoøeného ze speciálních znakù je pro odli¹ení 
+pou¾íván znak \verb|'^'| (napøíklad \verb|<@>^|).
+
+\endinput
+-------------------------------------------------------------------------------
+Ratatosk ... SLR generator, s~moznosti navraceni nad shift/reduce prechody
+	     --- lze tedy analyzovat i~non SLR bezkontextove jazyky. Gopher.
+Happy    ... generator, jehoz vstupem je anotovana gramatika v~BNF. 
+	     YACC like. Haskell.             
+             

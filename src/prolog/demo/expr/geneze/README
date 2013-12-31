@@ -1,0 +1,24 @@
+./
+	Postup vytvoreni parseru v jednotlivych krocich.
+
+1chains.pl
+	Dve pevne dane urovne priorit infixnich binarnich operatoru.
+        
+2gen.pl
+	Libovolny pocet urovni infixnich binarnich operatoru.
+
+3unary.pl
+	Testovaci verze: staticke unarni operatory, jedna uroven precedence. 	
+
+5binary.pl
+	Testovaci verze: staticke binarni operatory, jedna uroven precedence. 	
+
+6both.pl
+	Testovaci verze: staticke binarni a unarni operatory, jedna 
+	uroven precedence.
+
+7eval.pl
+	Testovaci verze: staticke binarni a unarni operatory, jedna 
+	uroven precedence, vyhodnocovac.
+
+-EOF-

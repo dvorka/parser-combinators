@@ -1,0 +1,147 @@
+#------------------------------------------------------------------------------
+#
+#                        Configuration file for HILEX
+#
+#                                Languague: C++
+#
+#                                 Martin Dvorak
+#                                      2000
+#------------------------------------------------------------------------------
+
+Setup( "CPP 2 HTML page" )
+{
+ Prefix
+ =
+"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HMTL using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT=\"#FFFF00\" BGCOLOR=\"#000080\">
+
+<PRE>
+<FONT FACE=\"COURIER NEW, ARIAL\" SIZE=\"+0\">
+";
+
+ Postfix
+ =
+"</FONT>
+</PRE>
+</BODY>
+</HTML>
+";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "KEYWORDS" )
+{
+ Descr="asm|auto|break|case|cdecl|char|class|const|";
+ Descr="continue|default|delete|do|double|else|";
+ Descr="enum|extern|far|float|for|friend|";
+ Descr="goto|huge|if|inline|interrupt|int|long|";
+ Descr="near|new|operator|pascal|private|protected|public|";
+ Descr="register|return|short|signed|sizeof|";
+ Descr="static|struct|switch|template|this|typedef|";
+ Descr="union|unsigned|virtual|void|volatile|while";
+
+ Color="#FFFFFF";
+ Bold="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "IDENTIFIER" )
+{
+ Descr  ="[A-Za-z_][A-Za-z_0-9]*";
+
+ Color="#FFFF00";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "C++ COMMENTS" )
+{
+ Descr="//[^\n]*\n";
+
+ Color="#C0C0C0";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "PREPROCESOR" )
+{
+ Descr="#((\\\n)|[^\n])*\n";
+
+ Color="#00FF00";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "C COMMENTS" )
+{
+ Descr="/\*((\*+[^/])|[^\*])*\*+/";
+
+ Color="#C0C0C0";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "STRING" )
+{
+ Descr="\"((\\\")|[^\"])*\"";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "CHARACTER CONSTANT" )
+{
+ Descr="\'(.|\.)\'";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "HEXA CONSTANT" )
+{
+ Descr="0[xX][0-9A-Fa-f]+[Uu]?[Ll]?";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "FLOAT CONSTANT" )
+{
+ Descr="([0-9]+\.[0-9]*[fF]?[Ll]?)|([0-9]+[fF]?[Ll]?)|";
+ Descr="([0-9]+\.[0-9]*[Ee]-?\+?[0-9]+[fF]?[Ll]?)";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "DECIMAL CONSTANT" )
+{
+ Descr="[0-9]+[Uu]?[Ll]?";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "SYMBOL" )
+{
+ Descr  ="\.|;|,|:|-|=|^|&|\?|<|>|%|!|~|\+|/|\*|\[|\]|\{|\}|\||\(|\)";
+
+ RawBeg="<FONT COLOR=\"#FFFFFF\">";
+ RawEnd="</FONT>";
+}
+
+#- EOF ------------------------------------------------------------------------

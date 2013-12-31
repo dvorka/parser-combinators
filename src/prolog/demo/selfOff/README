@@ -1,0 +1,16 @@
+./
+			Off line self application
+                        
+	BNF gramatika je prelozena do zdrojoveho kodu parseru, ktery je 
+        tvoren knihovnimi konstruktory.
+
+selfoff.pl
+	Generator kodu *.bnf -> *.pl.
+
+bnf/
+	Soubory s gramatikami.
+
+code/
+	Vygenerovane parsery.
+
+- EOF -

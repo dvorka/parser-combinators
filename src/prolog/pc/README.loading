@@ -1,0 +1,10 @@
+
+BinProlog
+	:-(Goal).   ... execute Goal after everything is included
+	:-##(Goal). ... execute Goal immediately *when* including
+        		Remark: the rest of file after ##/2 is ignored!
+        :-[file]    ... include using already defined method (e.g. consult/1)
+                        default: include everything into 1 file
+	:-consult(file) ... include file by file
+
+- EOF -

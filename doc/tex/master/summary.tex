@@ -1,0 +1,177 @@
+\chapter{Pro a~proti}\label{ProAProti}
+V~této kapitole se pokusíme o~shrnutí výhod a~nevýhod
+kombinátorového vytváøení parserù.
+
+\vskip 2mm\noindent
+Hlavní pøednosti metody a~vylep¹ení, kterých bylo dosa¾eno
+v~rámci této práce, lze shrnout v~následujících bodech:
+\begin{quote}
+\noindent $\oplus$
+Kombinátorové vytváøení parserù má, pøedev¹ím díky tomu, ¾e 
+je postaveno na programování vy¹¹ího øádu, \uv{online} charakter;
+parsery lze vytváøet za bìhu bez nutnosti 
+konzultování kódu nových analyzátorù do 
+interpretu, které je nezbytné u~ostatních pou¾ívaných metod, napøíklad
+u~gramatik definitních klauzulí (DCG viz napøíklad Clocksin \verb+&+
+Mellish \cite{Clocksin}).
+Díky kolonám je navíc mo¾né vytváøet za bìhu i~kód urèený pro sémantickou
+analýzu provádìnou v~rámci rozkladu. 
+
+\vskip 2mm
+\noindent $\oplus$
+Parsery vytvoøené pomocí konstruktorù provádìjí rozklad metodou
+analýzy s~návratem. Jsou silnìj¹í ne¾ bì¾nì pou¾ívané metody, které
+se omezují pouze na jednoznaèné gramatiky, proto¾e umo¾òují analyzovat
+inherentnì nejednoznaèné jazyky. Nedeterministické parsery jsou zpravidla
+men¹í ne¾ parsery deterministické, ale ménì efektivní~--- analýza
+s~návratem je èasovì nároèná a~kromì toho je zdrojem komplikací,
+pokud na ni navazuje analýza sémantická.
+
+I~pøi pou¾ití nedeterministických parserù lze dosáhnout relativnì 
+uspokojivých výsledkù, proto¾e lze libovolný parser vytvoøený z~knihovních
+konstruktorù spustit v~\uv{pseudodeterministickém módu} umo¾òujícím
+pou¾ití výhledù pro zefektivnìní rozkladu. Takový parser mù¾e být
+vytvoøen pomìrnì snadno, proto¾e se programátor nemusí zabývat
+øe¹ením problémù, které nastávají pøi výskytu kolizí v~kódu
+parseru deterministického.
+
+% inherentne nejednoznacne jazyky jsou jazyky pro ktere neexistuje
+% jednoznacna gramatika, ktera by je generovala
+
+\vskip 2mm\noindent $\oplus$
+Parsery lze snadno vytváøet pomocí pøipravené sady konstruktorù.
+
+\vskip 2mm\noindent $\oplus$
+Díky pomìrnì silné podpoøe zavádìní u¾ivatelských operátorù v~jazyce
+Prolog se podaøilo dosáhnout pøirozeného a~èitelného zápisu kódu parserù, 
+který umo¾òuje jejich snadnou modifikovatelnost. Zpùsob zápisu 
+je velmi blízký notaci gramatik, tak¾e mù¾e do urèité míry nahradit 
+jejich roli pøi popisu zpracovávaného jazyka. Navíc je tento popis 
+zárovìò funkèním analyzátorem.
+
+\vskip 2mm\noindent $\oplus$
+Nahrazením backtrackingu seznamem úspì¹ných rozkladù se podaøilo 
+dosáhnout lep¹í èasové slo¾itosti, proto¾e tak bylo odstranìno 
+navracení zpùsobené výbìrem nesprávné cesty pøi rozkladu.
+
+% musi se totiz prochazet *cely* derivacni strom - nelze totiz
+% lokalne urcit, ktere reseni zpracovalo nejdelsi cast vstupu
+
+\vskip 2mm\noindent $\oplus$
+Pøipravené módy a~ladící systém, jeho¾ souèástí je také metainterpret,
+usnadòuje efektivní vyhledávání a~odstraòování chyb z~parserù
+
+\vskip 2mm\noindent $\oplus$
+Pomocí módù se podaøilo dosáhnout toho, ¾e lze analyzovat jazyky generované
+LL(1) gramatikami algoritmem deterministické syntaktické analýzy.
+
+\vskip 2mm\noindent $\oplus$
+Díky blízkému vztahu kombinátorù a~gramatik lze aplikovat mno¾ství
+transformací, které byly pùvodnì urèeny pro gramatiky, na knihovní
+parsery. Navíc lze tyto transformace \uv{zabudovat} pøímo do definic
+konstruktorù, aby se jimi tvùrce parserù nemusel zabývat.
+
+\vskip 2mm\noindent $\oplus$
+Vzhledem k~tomu, ¾e jsou parsery vytváøeny ruènì, lze získat vìt¹í 
+kontrolu nad procesem rozkladu vstupního textu. Díky tomu lze
+øe¹it rùzné podúlohy rozkladu vhodnou metodou pøípad od pøípadu 
+místo pou¾ití obecného algoritmu. Pøíkladem mù¾e být implementace 
+zotavovacích strategií pøi výskytu chyby ve vstupním textu v~módech
+\verb+ll1/4+ a~\verb+pseudoll1/4+, kterou je mo¾né provést konkrétnì
+pro danou syntaktickou konstrukci, ve které nastala a~dosáhnout tak vìt¹í 
+úèinnosti, ne¾ kdyby byla pou¾ita nìjaká univerzální strategie 
+aplikovaná ve v¹ech pøípadech.
+
+\vskip 2mm\noindent $\oplus$
+Pou¾ití parserù vytvoøených pomocí knihovny umo¾òuje zavedení
+u¾ivatelsky definované syntaxe do prologovských programù (u¾ivatelsky
+pøívìtivý formát vstupu programù, konfiguraèní soubory, \dots) 
+a~snadnìj¹í psaní textových aplikací. 
+Uplatnìní mohou nalézt, díky lehkosti s~jakou je lze vytváøet,
+pøi importu dat a~textové komunikaci mezi rùznými aplikacemi 
+a~Prologem nebo pøi unifikaci zdrojù, jejím¾ pøíkladem
+mù¾e být pou¾ití pøi zpracování zdrojù textové povahy na Internetu.
+Lze je také pou¾ít v~prototypovacím systému, co¾ je oblast
+ve které je Prolog èasto nasazován.
+
+% Motivace pro zavedeni struktury LOS:
+%	Bez ni by jsme museli v prubehu vypoctu pro jednotlive
+% mezivysledky backtrackovat, takto je sbiram primo pri jednom pruchodu.
+% Ma tedy vyznam predevsim z hlediska casove slozitosti.
+
+\vskip 2mm\noindent $\oplus$
+Pokusme se je¹tì o~srovnání generátorù a~konstruktorù parserù. Mno¾ina
+kombinátorù, kterou nabízí formální systém pro popis pøijímaného
+jazyka v~generátorech, je zpravidla pevnì dána, zatímco v~konstruktorech 
+parserù lze tuto mno¾inu libovolnì roz¹iøovat. Díky tomu lze parsery 
+vytváøet rychleji, nebo» jsou k~dispozici konstruktory pro typické 
+syntaktické kostrukce a~není tedy nutné vytváøet mno¾ství rùzných, 
+ale velmi podobných definic. Popis vstupního jazyka je zde hutnìj¹í 
+a~srozumitelnìj¹í.
+
+Na druhou stranu generátory zpravidla provádìjí pøi vytváøení
+parseru analýzu, která následnì umo¾òuje provádìt rozklad velmi efektivnì.
+To u~konstruktorù není mo¾né, proto¾e fáze specifikace je zároveò
+fází vytváøení parseru --- pøípadná analýza tedy musí být 
+provádìna \uv{online}.
+\end{quote}
+Nevýhody:
+\begin{quote}
+\noindent $\ominus$
+Metoda kombinátorového vytváøení parserù pochází ze svìta funkcionálního 
+programování, kde se osvìdèila v~\uv{lazy} funkcionálních jazycích.
+Vzhledem k~rozhodnutí pou¾ít seznam úspì¹ných rozkladù pro
+uchovávání výsledkù bylo nutné se vyrovnat s~dùsledky pøechodu 
+do jazyka s~\uv{early} povahou, kterým Prolog je. Za úèelem øe¹ení 
+vzniklých problémù bylo pøedstaveno mno¾ství rùznì úèinných technik 
+oøezávání struktury LOS. Chování, které bylo ve svìtì \uv{lazy} 
+funkcionálních jazykù \uv{zadarmo}~--- zde muselo být implementováno,
+co¾ mù¾e být za urèitých okolností pøíèinou ztráty efektivity.
+
+\vskip 2mm\noindent $\ominus$
+Víceménì podobným problémem je i~programování vy¹¹ího øádu, 
+na kterém metoda stojí. Proto¾e jeho podpora zatím není 
+standardní souèástí jazyka Prolog (ve vìt¹inì moderních 
+interpretù se ale v~nìjaké formì nachází) situace musela 
+být øe¹ena vlastní implementací. Proto¾e jsme chtìli, aby 
+si knihovna zachovala nezávislost na konkrétním interpretu, byla
+do implementaèního jazyka pøidána dodateènì a~to
+samozøejmì za cenu urèité re¾ie, na rozdíl od situace, kdy by byla 
+jeho integrální souèástí.
+Nicménì pou¾ité øe¹ení umo¾òuje \uv{u¹ít ji na míru} danému interpretu
+takovým zpùsobem, ¾e kód který zprostøedkovává jednotné rozhraní
+mù¾e být snadno v~implementaci jazyka Prolog s~kvalitním pøekladaèem 
+vyoptimalizován ji¾ pøi zavádìní programu.
+
+\vskip 2mm\noindent $\ominus$
+Prolog se hodí pøedev¹ím pro zpracování krátkých vstupù s~velmi
+nejednoznaènou gramatikou (pøirozený jazyk). Pøi analýze umìlých
+jazykù je v¹ak situace pøesnì opaèná --- zpracovávány jsou 
+dlouhé vstupy s~gramatikami, které jsou deterministické.
+
+S~tím souvisí i~zpùsob reprezentace vstupního 
+textu\footnote{ Napøíklad SWI Prolog \cite{SwiMan} 
+pou¾ívá pro reprezentaci jedné polo¾ky prologovského seznamu {\bf 12} bytù.}
+v~interpretech, který obvykle není pøíli¹ efektivní.
+Tento problém se èásteènì podaøilo vyøe¹it zavedením módù umo¾òujících
+pøijímání vstupu i~z~jiných zdrojù (soubory viz \ref{Vstup}).
+
+\vskip 2mm\noindent $\ominus$
+Pro praktickou pou¾itelnost parseru má zásadní význam, aby pracoval 
+pokud mo¾no
+v~lineárním èase a~prostoru. Toho se podaøilo dosáhnout
+pro LL(1) gramatiky~--- odpovídá to výpoèetní strategii Prologu.
+Souèasným standardem jsou v¹ak LALR(1) analyzátory, které pokrývají
+výraznì vìt¹í èást bezkontextových jazykù ne¾ LL(1). Tyto 
+analyzátory provádìjí rozklad algoritmem syntaktické analýzy 
+opaènì ne¾ kombinátorové parsery --- tedy \uv{zdola nahoru}.
+
+% i kdy¾ v principu top-down LALR taky jde
+\end{quote}
+Jak plyne z~této kapitoly, má vytváøení parserù pomocí 
+knihovny konstruktorù parserù øadu specifik. O~tom, zda je knihovna 
+vhodná pro øe¹ení dané úlohy, se lze rozhodnout tøeba na základì 
+vý¹e uvedeného hodnocení.
+
+\endinput
+-------------------------------------------------------------------------------

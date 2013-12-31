@@ -1,0 +1,15 @@
+./
+	Implementace predikatu :-@ *bez* curryfikace.
+
+standard.pl
+bp.pl
+swi.pl
+	Verze :-@ bez curryfikace:
+        	standard ... nezavisla na implementaci Prologu (LPA Prolog)
+        	bp       ... optimalizovana pro BinProlog
+                swi      ... optimalizovana pro SWI Prolog
+
+curry/
+	Verze :-@ *umoznujici* curryfikaci a generovani kodu pro ni.
+
+- EOF -

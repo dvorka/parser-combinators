@@ -1,0 +1,13 @@
+./
+	Pouze predikat :->/2.
+
+standard.pl
+bp.pl
+swi.pl
+	Implementace :->/2 pomoci standardnich predikatu a verze
+        optimalizovane pro BinProlog a SWI Prolog
+
+spec/
+	Kod umoznujici pouze specializaci :->/2.
+
+- EOF -

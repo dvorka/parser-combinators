@@ -1,0 +1,179 @@
+\chapter{Programování vy¹¹ího øádu}\label{ProgramovaniVyssihoRadu}
+\setcounter{page}{1}
+U¾iteènost programování vy¹¹ího øádu, jako programovacího stylu,
+prokázal svìt funkcionálního programování. V~moderních funkcionálních
+jazycích se s~ním setkáváme na ka¾dém kroku.
+
+A~v~èem jsou jeho hlavní výhody? Pøedev¹ím umo¾òuje vìt¹í
+znovupou¾itelnost jednou vytvoøeného kódu a~otevírá cestu k~abstraktnìj¹ím definicím funkcí resp. predikátù v~programech. Tyto
+vlastnosti nám umo¾òují vyhnout se programování velkého mno¾ství
+podobných a~zpravidla opakujících se definic.
+
+Programování vy¹¹ího øádu je ov¹em programovací technika dostupná i~v~jazyce 
+Prolog. V~první èásti této kapitoly zmíníme existující podporu
+programování vy¹¹ího øádu v~interpretech jazyka Prolog. V~èásti druhé
+zavedeme vlastní predikát \verb|:-@/1|, který nám navíc umo¾ní, v~rámci
+mo¾ností, pøenést do Prologu dal¹í techniku známou z~funkcionálního
+programování --- curryfikaci. Nakonec vytvoøíme nìkolik predikátù vy¹¹ího
+øádu, které jsou obdobami osvìdèených funkcionálù.
+
+\section{Existující podpora}
+Míra podpory pro programování vy¹¹ího øádu je v~interpretech jazyka
+Prolog rùzná. V~nìkterých jsou pouze predikáty urèené normou jazyka, v~jiných 
+se naopak mù¾eme setkat jak s~vestavìnou podporou, tak s~pøipravenou sadou 
+u¾iteèných predikátù vy¹¹ího øádu. 
+
+Jak známo, v~Prologu mají data i~kód stejnou syntaxi a~pøi interpretaci
+programù mají také podobnou reprezentaci. Aby bylo vùbec mo¾né programování
+vy¹¹ího øádu realizovat, musejí být k~dispozici predikáty pro vytváøení 
+kódu z~dat. Do jazyka Prolog je k~tomuto úèelu zaøazen standardní predikát
+\verb|call/1|, který svùj jediný parametr v~podobì \uv{datového termu} 
+interpretuje jako kód a~vykoná jej.
+Typický zpùsob pou¾ití \verb|call/1| je spojen s~operátorem \emph{univ}:
+\begin{quote}\begin{verbatim}
+?- G =.. [mod, 23, 7, X],
+   call(G).
+G = mod(23, 7, 2)
+X = 2
+Yes
+\end{verbatim}\end{quote}
+Základ podpory programování vy¹¹ího øádu tvoøený \verb|call/1| je nìkdy
+je¹tì doplnìn variantami predikátù \verb|apply/2| a~\verb|call/n|:
+
+\begin{itemize}
+\item $call(+GoalTerm, +ExtraArg_1, +ExtraArg_2, \dots )$ \vskip 0.1mm
+Pøipojením argumentù $ExtraArg_1$, $ExtraArg_2$, \dots\ k~termu
+GoalTerm je vytvoøen cíl, který je zavolán analogií standardního
+predikátu \verb|call/1|:
+\begin{quote}\begin{verbatim}
+?- call(mod(23), 7, X).       % ?- call(mod(23,7,X)).
+X = 2   
+Yes
+\end{verbatim}\end{quote}
+
+% Souvislost s typováním a èásteèným vyhodnocením
+
+V~efektivnìj¹í variantì je predikát realizován vestavìním do 
+prologovského interpretu. Tím se v¹ak \verb|call/n|
+stává ve své podstatì predikátem s~promìnným poètem argumentù.
+
+Pokud \verb|call/n| vestavìn není, je zpravidla implementován pro 
+jednotlivé arity zvlá¹», co¾ je v~jistém smyslu èist¹í øe¹ení. 
+Umo¾òuje klasickou interpretaci takového predikátu, jeho arita 
+je ov¹em omezena.
+
+\item $apply(+GoalTerm, +List)$ \vskip 0.3mm
+Pøipojí prvky seznamu $List$ k~argumentùm cíle $GoalTerm$ a~výsledný term zavolá~--- 
+stejnì jako v~pøedchozím pøípadì:
+\begin{quote}\begin{verbatim}
+?- apply(mod(23), [7, X]).      % ?- call(mod(23,7,X)).
+X = 2   
+Yes
+\end{verbatim}\end{quote}
+Predikát \verb|apply/2| je tedy sémanticky ekvivalentní a~mnohem
+pøijatelnìj¹í variantou predikátu \verb|call/n|. Jeho implementace
+také bývá oznaèována jako efektivnìj¹í --- není toti¾ nutné analyzovat
+dopøedu neznámý poèet argumentù.
+\end{itemize}
+Predikát \verb|apply/2| je z~hlediska logického programování
+èist¹í. Ani on v¹ak není bì¾nou souèástí prologovských interpretù. 
+
+
+
+\section{Predikát :-@}\index{{\tt :-"@}}
+Aby knihovna kombinátorù byla \emph{pøenositelná}, rozhodl jsem se 
+vyvarovat se pou¾ívání nestandardních predikátù \verb|call/n|
+a~\verb|apply/2|. Proto jsem implementoval vlastní predikát
+\verb|:-@/1|, který je doká¾e nahradit a~vyu¾ívá výhradnì standardních 
+prostøedkù jazyka Prolog:
+\begin{itemize}
+\item $:-@([+GoalTerm, +ExtraArg_1, +ExtraArg_2, \dots] )$ \vskip 0.1mm
+Pøipojením argumentù $ExtraArg_1$, $ExtraArg_2$, \dots\ k~termu
+$GoalTerm$ je vytvoøen cíl, který je ji¾ zavolán standardní cestou. Pou¾ití
+tohoto predikátu je obdobné jako v~pøedchozích pøípadech:
+\begin{verbatim}
+?- :-@ [mod(23), 7, X].
+X = 2   
+Yes
+\end{verbatim}
+\end{itemize}
+V~knihovnì kombinátorù je pou¾íván pro programování vy¹¹ího øádu
+výhradnì zavedený predikát \verb|:-@/1|. Výhodou tohoto øe¹ení je, ¾e
+knihovnu je mo¾né pou¾ít kdekoli a~navíc, pokud obsahuje daný interpret
+jazyka Prolog podporu pro programování vy¹¹ího øádu, napøíklad ve
+formì vý¹e zmínìných primitiv \verb|call/n| èi \verb|apply/2|,
+si lze z~nich vybrat to, které je zde efektivnìj¹í a~implementovat
+pomocí nìj \verb|:-@/1|. Tak je mo¾né pùvodnì obecnou knihovnu snadno
+\uv{u¹ít na míru} danému interpretu. Takové optimalizované verze jsou
+pøipraveny pro implementace BinProlog a~SWI Prolog.
+
+Predikát \verb|:-@/1| je definován také jako prefixní operátor, co¾ 
+zjednodu¹uje jeho pou¾ívání.
+
+
+
+
+\section{Curryfikace}\label{Curryfikace}\index{curryfikace}
+Dal¹í výhodou na¹eho predikátu \verb|:-@/1| je to, ¾e mù¾eme s~jeho
+pomocí pøenést z~funkcionálního programování je¹tì jeden u¾iteèný
+jev.
+
+V~nìkterých funkcionálních jazycích, jejich¾ zástupcem je napøíklad
+Haskell, jsou s~oblibou pou¾ívány takzvané
+\uv{curry} funkce.  Ty umo¾òují je¹tì struènìj¹í zápis a~vìt¹í míru
+obecnosti v~definicích. My¹lenka stojící v~pozadí \uv{curryfikace} je
+následující: aplikace funkce $f$ na argumenty $a_1$, $a_2$,
+\dots, $a_n$ je ekvivalentní aplikaci $f$ na $a_1$, která vrátí funkci, 
+a~následnou aplikaci této funkce postupnì na $a_2$, \dots, $a_n$. Tato 
+postupná aplikace umo¾òuje dosáhnout vìt¹í pru¾nosti jak v~definici, 
+tak pøi pou¾ití funkce, proto¾e umo¾òuje dodávat argumenty po
+èástech a~otevírá cestu k~vìt¹í míøe abstrakce.
+
+%Tento efekt jsem pøenesl do jazyka Prolog prostøednictvím predikátu
+%\verb|:-@|. 
+
+Pokud je skrze \verb|:-@/1| zavolán predikát, u~kterého nejsou zatím
+specifikovány v¹echny parametry, je výsledkem èásteèná aplikace
+\uv{curry} predikátu:
+\begin{quote}\begin{verbatim}
+?- :-@ [append,[1,3,5],R].
+R = append([1,3,5])
+Yes.
+\end{verbatim}\end{quote}
+Jakmile jsou v¹echny zbylé parametry známy, je zavolán samotný predikát:
+\begin{quote}\begin{verbatim}
+?- :-@ [append,[1,3,5],T],
+|  :-@ [T,[7,9],R].
+T = append([1,3,5])
+R = [1,3,5,7,9]
+Yes
+\end{verbatim}\end{quote}
+Proces postupné aplikace jednotlivých parametrù je provádìn
+automaticky, tak¾e není nutné explicitnì implementovat
+chování v~jednotlivých pøípadech volání s~neúplným poètem parametrù, 
+jak tomu je napøíklad v~øe¹ení publikovaném v~práci 
+Naish~\cite{Naish}, proto¾e se potøebný kód generuje podle obsahu
+databáze sám.
+Urèitým omezením, které plyne z~toho, ¾e modelujeme chování funkcí
+pomocí predikátù je to, ¾e poslední argument predikátu je rezervován
+pro výslednou hodnotu.
+
+Na druhou stranu lze pomocí prostøedkù logického programování vytváøet
+konstrukce, které ve funkcionálním programování nejsou mo¾né. Takovou
+konstrukcí je napøíklad navracení nebo pou¾ití rùzných módù promìnných.
+
+Vzhledem k~tomu, ¾e proces curryfikace sebou samozøejmì nese urèitou re¾ii,
+je jeho pou¾ití v~rámci knihovny volitelné.
+
+Vý¹e uvedené jednoduché pøíklady nejsou zatím pøíli¹ pøesvìdèivé. Skuteèná
+síla \uv{curryfikace} se uká¾e zvlá¹tì v~kombinaci s~predikáty vy¹¹ího
+øádu, jen¾ vytvoøíme v~následující èásti.
+
+
+
+\input{fun}
+
+
+
+\endinput
+-------------------------------------------------------------------------------

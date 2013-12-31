@@ -1,0 +1,78 @@
+%------------------------------------------------------------------------------
+%
+%           Convert Unix files to DOS (0xA -> 0xD 0xA) a vice versa
+%                               (SWI-Prolog)
+%
+%                               Martin Dvorak
+%                                   1999
+%------------------------------------------------------------------------------
+% Init & libraries
+
+% Parser combinators library
+:- ['pc/loaderSWI'].
+
+% Contrib
+:- ['support/debug'].		% PC debug
+:- ['support/file'].            % open, close, load, write, ...
+
+%------------------------------------------------------------------------------
+
+go:-
+        unix2Dos(foo,foot).
+%        dos2Unix(foot,fooz).
+
+%- code -----------------------------------------------------------------------
+% unix2dos(+UnixFileName, -DosFileName)
+% must be:
+%       ?- UnixFileName == DosFileName.
+%       No
+
+unix2Dos(UnixFileName, DosFileName):-
+	printf(['Unix2Dos: ',UnixFileName,' -> ',DosFileName]),
+         loadFile(UnixFileName, UnixBuffer),    % input file into buffer
+         openFile(DosFileName,Old,w),           % redirect output to file
+          unix2DosFilter(UnixBuffer+_),
+         closeFile(Old,w),                      % close output file
+	printf(['... Bye!',nl]).
+
+%------------------------------------------------------------------------------
+% unix2DosFilter(?Wrapper)
+% - conversion: 0xA -> 0xD 0xA
+
+unix2DosFilter(W):-
+ W <>
+       (
+        nonSymbol([10]) <@ atom2Atomic => show
+         <:
+        symbol([10]) <@ const([13,10]) => string2Atom => show
+         <:
+        terminate
+       )<*> .
+
+%------------------------------------------------------------------------------
+% dos2Unix(+DosFileName, -UnixFileName)
+% must be:
+%       ?- UnixFileName == DosFileName.
+%       No
+
+dos2Unix(DosFileName, UnixFileName):-
+        loadFile(DosFileName, DosBuffer),       % input file into buffer
+        openFile(UnixFileName,Old,w),           % redirect output to file
+         dos2UnixFilter(DosBuffer+_),
+        closeFile(Old,w).                       % close output file
+
+%------------------------------------------------------------------------------
+% dos2UnixFilter(?Wrapper)
+% - conversion: 0xD 0xA -> 0xA ... remove all 0xDs
+
+dos2UnixFilter(W):-
+ W <>
+       (
+        nonSymbol([13]) <@ atom2Atomic => show  % show the others
+         <:
+        symbol([13])                            % ignore 0xD
+         <:
+        terminate
+       )<*> .
+
+%- EOF ------------------------------------------------------------------------

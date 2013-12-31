@@ -1,0 +1,658 @@
+\chapter{Programátorské techniky}\label{ProgramatorskeTechniky}
+Jak jsme se ji¾ pøesvìdèili, pomocí konstruktorù lze snadno a~rychle
+vytváøet nové parsery. V~této kapitole si uká¾eme, jak docílit toho,
+aby tyto parsery pracovaly také co mo¾ná nejefektivnìji a~to jak z~hlediska èasové, tak prostorové slo¾itosti. Navrhneme roz¹íøení
+knihovny o~dal¹í konstruktory, ale pøedev¹ím se budeme vìnovat
+programátorským technikám vedoucím k~lépe pracujícím parserùm.
+
+\section{Vlastnosti operátorové notace}\label{VlastnostiOperatoroveNotace}
+\index{\verb+:->+!notace}
+U¾ jsme si zvykli na to, ¾e pøi definicích parserù lze pou¾ívat
+namísto standardního zápisu predikátù notaci operátorovou. Stejnì jako
+u~v¹ech ostatních námi definovaných operátorù, i~v~pøípadì operátoru
+\verb|:->| bylo hlavní motivací pro jeho zavedení umo¾nit
+pohodlnìj¹í a~pøehlednìj¹í zapisování parserù. Operátorová notace
+tohoto predikátu nám v¹ak navíc umo¾ní práci parserù zefektivnit.
+
+V~parserech, které jsme dosud vytvoøili, vystupoval \verb|:->| v¾dy
+jako predikát v~operátorové notaci, jen¾ v~rámci svého volání svazuje
+parser s~vstup\-nì/\-výs\-tup\-ním termem a~provádí jeho
+aplikaci. Cílem této èásti je ukázat, ¾e po vhodném roz¹íøení knihovny
+nebude volání predikátu \verb|:->| v~urèitých pøípadech vùbec nutné.
+
+\vskip 3mm
+My¹lenkou vý¹e zmínìného zlep¹ení je návrh pou¾ít operátor \verb|:->|
+nikoli jako cíl, ale pouze jako funktor vytváøející term a~to v¹e pøi
+zachování mo¾nosti operátorového zápisu konstruktorù.
+
+Zpùsob, jakým této úpravy dosáhnout, si demonstrujme na pøíkladu
+mutátoru \verb|<**>| pro iterovanou aplikaci daného parseru:
+\begin{quote}\begin{verbatim}
+<**>(P,W):-
+ W :->
+        ((P <&> P<**>)
+          <:>
+         epsilon).
+\end{verbatim}\end{quote}
+Pøepis tìla mutátoru vzhledem k~definicím priorit pou¾itých operátorù
+by vypadal takto:
+\begin{quote}\begin{verbatim}
+ :->( W, 
+      <:>( <&>( P, 
+                <**>(P)), 
+           epsilon))
+\end{verbatim}\end{quote}
+Pokud odstraníme uzávorkování parseru z~tìla definice mutátoru --- bude
+interpretován odli¹nì:
+\begin{quote}
+\hbox{
+\begin{minipage}[t]{1cm}
+\verb| |
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|W :->| \\
+\verb|        (P <&> P<**>)|\\
+\verb|         <:>|\\
+\verb|        epsilon|
+\end{minipage}
+
+\begin{minipage}[t]{2cm}
+\verb| |\\
+$\Rightarrow$
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|<:>( :->( W,|\\
+\verb|          <&>( P,|\\
+\verb|               <**>(P))),|\\
+\verb|     epsilon)|
+\end{minipage}}
+\end{quote}
+Operátor \verb|:->| zde vystupuje jako funktor struktury, který
+svazuje vstup\-nì/\-výs\-tup\-ní term s~prvním parserem v~alternativní
+kompozici. Pøestává tedy být cílem a~ukazuje se, ¾e by mohl být schopen
+za urèitých okolností plnit svou úlohu \uv{staticky}. Tento odli¹ný zpùsob 
+interpretace nás pøivádí k~my¹lence
+zavedení dal¹í varianty kombinátoru alternativní kompozice:
+\begin{quote}\begin{verbatim}
+% I+L :-> P1<:>P2
+<:>(I+L :-> P1,P2) :-	
+        I+L1 :-> P1,
+        I+L2 :-> P2,
+        append(L1,L2,L).
+\end{verbatim}\end{quote}
+Co jsme vý¹e uvedeným postupem vlastnì získali? Odpoví nám na to
+inovovaná definice mutátoru:
+\begin{quote}\begin{verbatim}
+<**>(P,W):-
+ W :->
+        (P <&> P<**>)
+          <:>
+         epsilon.
+\end{verbatim}\end{quote}
+Z~definice je vidìt, ¾e pøi zachování pùvodního zpùsobu zápisu nyní
+v~ka¾dé iteraci ubylo jedno volání predikátu \verb|:->|. Volá se toti¾
+místo nìj a~kombinátoru \verb|<:>/3| pouze nová verze \verb|<:>/2|.
+Díky tomu dojde k~nezanedbatelnému zrychlení.
+
+\hskip 3mm\noindent
+Stejným zpùsobem, jakým jsme upravili mutátor pro iterovanou aplikaci
+parseru \verb|<**>|, lze upravit samozøejmì nejen ostatní iterátory,
+ale i~konstruktory parserù. Aby to bylo mo¾né, musíme definovat dal¹í
+varianty konstruktorù --- stejnì jako v~pøípadì kombinátoru
+\verb|<:>|. O~tom, jaká z~verzí toho kterého konstruktoru se pou¾ije
+rozhoduje operátorové okolí \verb|:->|. Je asi zbyteèné zmiòovat, ¾e
+definování alternativních variant má smysl pouze v~pøípadech
+konstruktorù, jen¾ jsou definovány rovnì¾ jako operátory. V~pøíkladu
+dal¹í alternativní varianty zùstaòme u~na¹eho mutátoru:
+\begin{quote}\begin{verbatim}
+<**>(W :-> P):-
+ W :->
+        (P <&> P<**>)
+          <:>
+         epsilon.
+\end{verbatim}\end{quote}
+Jak si lze pov¹imnout, arita novì definovaných variant konstruktorù je
+men¹í ne¾ arita jejich pùvodních definic. Dr¾íme se konvence v~ní¾
+vstup\-nì/\-výs\-tup\-ní term ji¾ není samostatným argumentem, ale je
+v¾dy pøipojen k~prvnímu parametru daného konstruktoru operátorem
+\verb|:->|. Díky tomuto jednoznaènému odli¹ení je volána v¾dy správná
+varianta predikátu pøímo~--- tj. verze s~aritou o~1 men¹í.
+
+\hskip 3mm\noindent
+V~knihovnì konstruktorù parserù jsou pøipraveny alternativní verze
+v¹ech nejbì¾nìj¹ích kombinátorù a~mutátorù, jen¾ jsou definovány jako
+operátory.
+Vnitønì se v~jejím jádøe vyu¾ívá takøka výhradnì zápis pøedstavený v~této
+èásti, aby bylo dosa¾eno vìt¹í efektivity. Cenou za dosa¾ené zrychlení
+je nutnost definování alternativních verzí konstruktorù.
+
+
+Pùvodní verze jsou v~knihovnì zachovány, aby se programátor nemusel 
+detailnì zabývat precedenèními vztahy
+mezi jednotlivými operátory, je novì zavedená notace navr¾ena tak,
+aby pùvodní zápis, kdy je parser explicitnì uzávorkován, bylo mo¾né
+pou¾ít v¾dy. 
+Pokud v¹ak máme pøehled o~prioritách operátorù (viz pøíloha \ref{PrehledOperatoru}), mù¾eme upravit výraz
+tak, aby se volala efektivnìj¹í varianta daného konstruktoru. Nový
+zpùsob zápisu parserù ale není mo¾né pou¾ít za v¹ech okolností pøímo~--- 
+nìkdy je nutné provést explicitní uzávorkování. Rovnì¾ v~pøípadech
+slo¾itìj¹ích parserù musí být programátor pozorný, aby byl parser
+interpretován pøesnì tak, jak zamý¹lel. Uka¾me si proto nyní je¹tì
+jeden pøíklad, v~nìm¾ pouká¾eme na záludnosti, které pou¾ití
+operátorové notace mù¾e skrývat. Zatímco definice klasickým zápisem:
+\begin{quote}
+\hbox{
+\begin{minipage}[t]{1cm}
+\verb| |
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|W :->|\\ 
+\verb|        (P<**> <&> Q <@ F)|
+\end{minipage}
+
+\begin{minipage}[t]{2cm}
+\verb| |\\
+$\Rightarrow$
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|:->( W,|\\ 
+\verb|     <@( <&>( <**>(P),|\\   
+\verb|              Q)|\\   
+\verb|          F))|
+\end{minipage}}
+\end{quote}
+bude v~poøádku. Pokud pou¾ijeme novou notaci, bude parser
+interpretován nesprávnì:
+\begin{quote}
+\hbox{
+\begin{minipage}[t]{1cm}
+\verb| |
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|W :->|\\ 
+\verb|        P<**> <&> Q <@ F|
+\end{minipage}
+
+\begin{minipage}[t]{2cm}
+\verb| |\\
+$\Rightarrow$
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|<@( <&>(W :-> P<**>,|\\ 
+\verb|        Q),|\\ 
+\verb|    F)|
+\end{minipage}}
+\end{quote}
+Aby byla dodr¾ena konvence, je nutné provést explicitní uzávorkování
+(podobnì jako jsme to uèinili v~mutátoru \verb|<**>| v~úvodu této
+èásti):
+\begin{quote}
+\hbox{
+\begin{minipage}[t]{1cm}
+\verb| |
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|W :->|\\
+\verb|        (P<**> <&> Q) <@ F|
+\end{minipage}
+
+\begin{minipage}[t]{2cm}
+\verb| |\\
+$\Rightarrow$
+\end{minipage}
+
+\begin{minipage}[t]{6cm}
+\verb|<@( W :-> (P<**> <&> Q),|\\
+\verb|    F)|
+\end{minipage}}
+\end{quote}
+Tato verze je ji¾ korektní. Vyu¾ívá alternativní variantu mutátoru
+\verb|<@|, volání \verb|:->| ji¾ neobsahuje a~je tedy efektivnìj¹í.
+
+\vskip 3mm\noindent
+Roz¹íøení knihovny, které jsme si pøedstavili v~této èásti, je spí¹e
+technického rázu. Programátor vyu¾ívající knihovnu nemusí tento zpùsob 
+zápisu pou¾ívat a~zabývat se precedenèními vztahy operátorù 
+a~uzávorkováním, aby jeho
+parsery byly korektní. Mù¾e zùstat u~bì¾né konvence, v~ní¾ parser
+stojí uzávorkován napravo od operátoru \verb|:->|~--- tak jako tomu
+bylo v~pøedchozích kapitolách. I~kdy¾ toti¾ definuje parser
+obvyklým zpùsobem a~je zavolána standardní verze konstruktoru, z~jejího tìla se ji¾ volání typicky dostává do kódu jádra knihovny a~setrvá v~nìm. Zde se vyu¾ívají efektivnìj¹í verze (jak se lze pøesvìdèit i~na
+pøíkladu mutátoru \verb|<**>|) a~ztráta je tedy minimální.
+
+Zále¾í tedy pouze na programátorovi, zda pùjde standardní cestou nebo
+vyu¾ije efektivnìj¹í, ale záludnosti skrývající notaci.
+
+\vskip 2mm
+Pozorný ètenáø si jistì také pov¹iml, ¾e pokud by byla tato úprava dota¾ena
+skuteènì do krajnosti, mohli by jsme se úplnì obejít bez programování
+vy¹¹ího øádu. To by v¹ak vy¾adovalo zmìnu celkového návrhu knihovny,
+nárùst jejího zdrojového kódu a~nutnost definovat
+mno¾ství dal¹ích operátorù. Proto se v~této práci budeme i~nadále
+dr¾et programování vy¹¹ího øádu.
+
+%..............................................................................
+
+\section{Zkrácené vyhodnocení}\label{ZkraceneVyhodnoceni}
+Díky kombinátoru alternativní kompozice doká¾eme vytváøet
+nedeterministické parsery a~jsme tedy schopni analyzovat jazyky
+generované nejednoznaènými gramatikami. V~této èásti uèiníme v~jistém
+smyslu krok zpìt a~pøedstavíme si jeho variantu, která má charakter
+zkráceného vyhodnocení. Tato varianta nám umo¾ní za urèitých podmínek
+nìkteré vìtve nedeterministického výpoètu oøezávat a~to pøi zachování
+úplnosti seznamu úspì¹ných rozkladù~--- tedy bez ztrát výsledkù. 
+Docílíme tak vìt¹í efektivity.
+
+Jak bylo ji¾ zmínìno, jazyky pøijímané parsery v~alternativní
+kompozici obecnì mohou být disjunktní. V~tìchto pøípadech dochází
+k~neefektivitì. Celý problém si uká¾eme na velmi jednoduchém pøípadu
+kombinátoru \verb|letter|, v~nìm¾ jsme v~jeho pùvodní definici pou¾ili 
+právì kombinátor \verb|<:>|:
+\begin{quote}\begin{verbatim}
+letter(W):-
+ W :-> 
+        lower <:> upper.
+\end{verbatim}\end{quote}
+Zamyslíme-li se nad tím, jak \verb|letter| funguje napøíklad pro vstup
+\verb|"a"|, tak zji¹»ujeme, ¾e je nejdøíve aplikován parser
+\verb|lower|. A¾ potud je v¹e v~poøádku. Potom je v¹ak pou¾it parser
+\verb|upper|, který neuspìje a~dojde k~navracení. Proto¾e jazyky
+pøijímané parsery \verb|lower| a~\verb|upper| jsou disjunktní, s~naprostou jistotou víme, ¾e kdykoli \verb|lower| uspìje, tak ji¾ nemá
+smysl parser \verb|upper| aplikovat --- ten v~takovém pøípadì
+v¾dy selhává.
+
+V~tomto jednoduchém pøípadì je ztráta efektivity je¹tì malá, ale
+mù¾eme si pøedstavit mnohem komplikovanìj¹í alternativní kompozice
+mno¾ství parserù, jejich¾ aplikace ji¾ bude z~hlediska èasové
+slo¾itosti nezanedbatelná. Kupøíkladu:
+\begin{quote}\begin{verbatim}
+prologProgram(W):-
+ W :->
+       (prologDirective 
+         <:> 
+        prologClause 
+         <:> 
+        prologComment) <**> .
+\end{verbatim}\end{quote}
+Pokud uspìje parser \verb|prologDirective| je jisté, ¾e v¹echny zbylé
+alternativy sel¾ou. To platí rovnì¾ v~pøípadì
+\verb|prologClause|. Výpoèetní slo¾itost aplikace jednotlivých parserù
+v~alternativní kompozici je v~tomto pøípadì ji¾ nezanedbatelná. Ve
+vìt¹inì iterací se tak plýtvá.
+
+Nabízí se tedy otázka, zda by nebylo mo¾né takovou pøídavnou informaci
+nìjakým zpùsobem vyu¾ít v~implementaci parserù. Umo¾ní nám to
+následující dvì varianty kombinátoru alternativní kompozice:\index{<:@{\tt <:}}
+\begin{quote}\begin{verbatim}
+<:(P1,P2,I+L):-
+        I+L_ :-> P1,
+        (L_=[] -> (I+L :-> P2) ; L=L_).
+\end{verbatim}\end{quote}
+Kombinátor \verb|<:| má charakter zkráceného vyhodnocení zleva. Pokud
+uspìje parser $P1$ tj. vrátí neprázdný seznam úspì¹ných rozkladù,
+stává se tento seznam rovnì¾ výsledkem kompozice. Parser $P2$ se
+pou¾ije pouze v~pøípadì selhání $P1$.\index{:>@{\tt :>}}
+\begin{quote}\begin{verbatim}
+:>(P1,P2,I+L):-
+        I+L_ :-> P2,
+        (L_=[] -> (I+L :-> P1) ; L=L_).
+\end{verbatim}\end{quote}
+Kombinátor \verb|:>| je symetrickou variantou \verb|<:|. Nejdøíve tedy
+aplikuje parser $P2$ a~teprve v~pøípadì jeho neúspìchu $P1$.
+
+Nyní definujme efektivnìj¹í variantu parseru \verb|letter| vytvoøenou
+pomocí jednoho z~právì zavedených kombinátorù:
+\begin{quote}\begin{verbatim}
+letter(W):-
+ W :-> 
+        lower <: upper.
+\end{verbatim}\end{quote}
+Vý¹e uvedený parser vydává identické výsledky jako pùvodní \verb|letter|,
+navíc v¹ak pracuje efektivnìji.
+
+Na základì právì vytvoøených kombinátorù mù¾eme definovat nejen
+mno¾ství lépe fungujících parserù, ale také samotných konstruktorù.
+
+V~jejich vytváøení pokraèujme nyní parserem binárního èísla. Jeho
+vstupem je posloupnost nul a~jednièek. Jako výsledek vydává
+odpovídající decimální hodnotu:\index{bin@{\tt bin}}
+\begin{quote}\begin{verbatim}
+bin(W):-
+ W :->
+        (symbolA("0") <: symbolA("1"))<<*>>
+                <@ foldR(evalBin,0>0) => alter(Val>_,Val).
+
+evalBin(I,Val>Pow,Value>Power):-
+        Power is Pow+1, Value is Val+(2^Pow)*I.
+\end{verbatim}\end{quote}
+Variantu novì definovaného kombinátoru alternativní kompozice jsme
+pou¾ili v~parseru \verb|bin| ve stejné situaci jako v~\verb|letter|.
+Pùjdeme je¹tì dál a~pøedstavíme si zástupce nové \uv{rodiny} iterátorù:
+\index{<*>@{\tt <*>}}
+\begin{quote}\begin{verbatim}
+<*>(P,W):-
+ W :->
+        (P <&> P<*>)
+         <:
+        epsilon.
+\end{verbatim}\end{quote}
+V~pùvodnì pou¾itém mutátoru \verb|<<*>>| je v~ka¾dé iteraci aplikováno
+primitivum \verb|epsilon| jen proto, aby byl jím vydaný výsledek
+(kromì pøípadu poslední iterace) oøíznut v~seznam úspì¹ných rozkladù
+pomocí \uv{diamantu}. 
+
+Iterátor \verb|<*>| øe¹í oøezávání struktury LOS elegantnìj¹ím
+zpùsobem --- \uv{zahazuje} nepotøebné výsledky \emph{za bìhu} a~postupuje nejpøímìj¹í cestou k~maximální derivaci. V~prùbìhu dal¹ích
+fází výpoètu se tak v~pøípadì zøetìzení parserù nemusíme zdr¾ovat
+vytváøením výsledkù o~nich¾ dopøedu víme, ¾e je nebudeme
+potøebovat. Druhá alternativa --- tedy \verb|epsilon|, se uplatní
+pouze jednou a~to za poslední èíslicí pøijímaného èísla:
+\begin{quote}\begin{verbatim}
+bin(W):-
+ W :->
+        (symbolA("0") <: symbolA("1"))<*>
+                <@ foldR(evalBin,0>0) => alter(Val>_,Val).
+\end{verbatim}\end{quote}
+V~knihovnì jsou pøipraveny i~varianty zbylých iterátorù --- jako
+\verb|<+>|, \verb|<?>| a~jejich varianty.
+
+Dùle¾itým pøínosem nových konstruktorù je nejen výrazná úspora pamìti,
+ale také vìt¹í efektivita výpoètu. Stejnì jako s~pomocí
+\uv{diamantových} verzí lze s~jejich pomocí udr¾ovat velikost
+struktury LOS v~pøijatelných mezích. Navíc se nezajímavé výsledky ani
+nevytváøejí, jak jsme si vysvìtlili vý¹e.
+
+\vskip 3mm\noindent
+Zároveò je na místì velká opatrnost pøi pou¾ití spoleènì s~parsery pøijímajícími jazyky, jejich¾ prùnik je neprázdný.
+
+Jindy mù¾e být eliminace derivací ¾ádoucí. Pøíkladem takové situace
+jsou identifikátory a~klíèová slova programovacích jazykù.
+
+Vezmìme si napøíklad jazyk Java. Klíèová slova jsou rezervovanými
+názvy identifikátorù (napøíklad \verb|new| èi \verb|for|). V~analyzátoru se pak pou¾ije konstrukce typu:
+\begin{quote}
+\verb|W :->|\\
+\verb|        ...|\\
+\verb|        |$parseKeyword$\\
+\verb|         <:|\\
+\verb|        |$parseIdentifier$\\
+\verb|        ...|
+\end{quote}
+Pokud uspìje parser klíèových slov $parseKeyword$, zbyteènì se ji¾
+neztrácí èas s~parserem identifikátorù. Ten by sice uspìl, ale jeho
+výsledek by nebyl pøípustný.
+
+Jindy pou¾ití nových verzí kombinátorù v~pøípadech parserù s~neprázdným
+prùnikem sice mù¾e zrychlit výpoèet a~u¹etøit pamì», zároveò nás v¹ak
+mù¾e pøipravit o~\emph{dùle¾ité výsledky}. Je tedy nutné vìnovat
+dostateènou pozornost návrhu parserù.
+
+A¾ dosud jsme vytvoøili nìkolik \uv{rodin} mutátorù pro iterativní aplikaci
+parserù. Rodina iterátorù pøedstavená v~této èásti je poslední a~v~mnoha ohledech nejlep¹í z~nich. Poèet definovaných iterátorù opìt
+narostl, proto jsou v¹echny pøehlednì shrnuty v~tabulce \ref{PrehledIteratoru}.
+\begin{table}
+\caption{Pøehled iterátorù}\label{PrehledIteratoru}
+\begin{center}
+\begin{tabular}{|c||c|c|c||l|}
+\hline
+Poèet iterací & Základní & \uv{Diamantové}& \uv{Zkracující} & Výsledek\\
+\hline
+$i \geq 0$ & \verb|<**>|&\verb|<<*>>|&\verb|<*>|& seznam\\
+$i \geq 0$ & \verb|<*@*>|&\verb|<<*@>>|&\verb|<*@>|& param.\\
+$i=0 \vee i=1$ & \verb|<??>|&\verb|<<?>>|&\verb|<?>|& seznam\\
+$i=0 \vee i=1$ & \verb|<?@?>|&\verb|<<?@>>|&\verb|<?@>|& param.\\
+\hline
+Derivací v~LOS& $i+1$ & $1$ & $1$ & \\
+\hline
+$i \geq 1$ & \verb|<++>|&\verb|<<+>>|&\verb|<+>|& seznam\\
+$i \geq 1$ & \verb|<+@+>|&\verb|<<+@>>|&\verb|<+@>|& param.\\
+\hline
+Derivací v~LOS& $i$ & $0 \vee 1$ & $0 \vee 1$ & \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+Èíslo $i$ v~ní urèuje poèet úspì¹ných aplikací parseru. Ve vlo¾ených øádcích je
+uveden maximální poèet derivací v~seznamu úspì¹ných rozkladù. Iterátory
+jsou definovány jak ve variantì pro bì¾né pou¾ití, tak v~aritì
+umo¾òující operátorový zápis, jemu¾ byla vìnována první èást této
+kapitoly.
+
+%..............................................................................
+
+\section{Ze¹tíhlování seznamu úspì¹ných rozkladù}
+Jak jsme se ji¾ pøesvìdèili, schopnost parserù vracet více ne¾ jednu
+derivaci v~seznamu úspì¹ných rozkladù je sice velmi u¾iteèná, ale
+rovnì¾ mù¾e vést k~jeho neoèekávané expanzi. Tato expanze mù¾e
+dosáhnout takových rozmìrù, ¾e se parsery mohou stát jak z~hlediska èasové,
+tak prostorové slo¾itosti nepou¾itelnými.
+
+V~této èásti se budeme vìnovat tomu, jak lze udr¾et rozsah seznamu
+úspì¹ných rozkladù v~rozumných mezích. V~úvahu pøicházejí dva zpùsoby.
+
+\vskip 3mm\noindent
+Prvním z~nich je omezování poètu derivací ve struktuøe LOS. Pro tento
+úèel jsme ji¾ pøipravili celou sadu konstruktorù.
+
+Nejvìt¹í skupinu tvoøí mutátory, které oøezávají strukturu LOS 
+pouze v~závislosti na poøadí derivací v~seznamu. Spoléhají pøitom 
+na konvenci, dle ní¾ se
+maximální derivace nachází v~hlavì seznamu a~zpravidla tomu tak
+skuteènì je. Patøí sem mutátor \verb|<>| a~pøedev¹ím \uv{zkracující}
+kombinátory alternativní kompozice z~pøedchozí èásti.
+
+Ponìkud vìt¹í kontrolu nad tím, které derivace odstraòujeme, nám
+poskytuje mutátor \verb|whole|. Klade na derivace podmínku zpracování
+celého vstupního textu. Jeho nevýhodou je v¹ak to, ¾e jej není mo¾né
+pou¾ívat v~prùbìhu výpoètu, ale a¾ po rozkladu celého vstupu. Slou¾í
+tedy pouze pro dodateèné odstranìní nepou¾itelných derivací.
+
+Nyní si pøedstavíme nový mutátor \verb|<?|. S~jeho pomocí ji¾ bude mo¾né
+omezit pøípustné derivace v~seznamu úspì¹ných rozkladù v~závislosti na
+vlastnostech samotného syntaktického stromu. Podle toho, zda bude
+derivace splòovat danou podmínku, bude buï ve struktuøe LOS ponechána
+nebo z~ní odstranìna. Mutátor definujeme rovnì¾ jako infixní operátor:
+\index{<?@{\tt <?}}
+\begin{quote}\begin{verbatim}
+<?(P,Cond,I+FL):-
+        I+L :-> P,
+        filter(sieve(Cond),L,FL).
+
+sieve(Cond,_>R):- :-@ [Cond,R].
+\end{verbatim}\end{quote}
+Nejdøíve je na vstup aplikován parser $P$. Potom jsou ze seznamu úspì¹ných
+rozkladù odstranìny derivace, jejich¾ výsledek nesplòuje podmínku
+$Cond$. Mù¾eme tak analyzovat syntaktické stromy i~na úrovni
+sémantické analýzy.
+
+\vskip 3mm\noindent
+Ji¾ jsme si také pøedstavili konstruktory, jen¾ umo¾òují odstraòovat ze
+syntaktických stromù symboly ztrácející po rozkladu smysl --- jako
+závorky èi separátory.
+
+Jádro tìchto konstruktorù tvoøí kombinátory \verb|<&| a~\verb|&>|. Na
+jejich základì jsme pøipravili nové kombinátory pro konkrétní pøípady
+jako \verb|enclosedIn| èi \verb|separatedBy|.
+
+Dal¹ím zástupcem této skupiny kombinátorù je \verb|nestedIn|. Umo¾òuje
+analyzovat strukturu vnoøených blokù s~mo¾ností aplikace sémantických
+operací na výsledky. Lze tak napøíklad zachytit strukturu pøijímaného
+textu ve formì nìjaké stromové datové struktury s~mo¾ností pøímo provést
+urèitý druh výpoètu:
+\index{nestedIn@{\tt nestedIn}}
+\begin{verbatim}
+nestedIn(P-F-C,Open and Close,W):-
+ W :->
+       ((Open &>
+                (P <: (P-F-C nestedIn Open and Close) )<+>
+                <& Close)
+           <&>> ( (P <: (P-F-C nestedIn Open and Close) )<+>
+                  <: return(C))
+       ) <@ F.
+\end{verbatim}
+Oblast jeho pou¾ití je pomìrnì rozsáhlá. Pro demonstraci si jej
+pøedstavíme pøi zpracování pseudo kódu procedurálního jazyka typu C~resp. Java. Zde je mo¾né vytváøet bloky kódu s~lokální platností
+deklarací. Pro jednoduchost nahradíme pøíkaz jazyka tokenem \verb|"c;"|.
+\begin{quote}\begin{verbatim}
+fooNestedBlocks(W):-
+  W :->
+        ((#>tokenA("c;")<#)-funNB-nil
+          nestedIn
+           symbol("{") and symbol("}")).
+
+funNB(A>B,nest(A,B)).
+\end{verbatim}\end{quote}
+Samozøejmì lze snadno parser upravit pro konkrétní pou¾ití. Parser
+\verb|fooNestedBlocks| je schopen zpracovat vnoøenou strukturu blokù a~vydat nám její strukturovanou reprezentaci. Pøíkladem takového vstupu
+je:
+\begin{quote}\begin{verbatim}
+{
+ c;
+ {
+  c;
+  { c; }
+  c;
+ }
+}
+c;
+{
+ c;
+}
+\end{verbatim}\end{quote}
+\verb|fooNestedBlocks| ukládá elementy na jedné úrovni do
+seznamu a~vnoøené bloky reprezentuje pomocí struktury \verb|nest|:
+\begin{quote}\begin{verbatim}
+?- s("{c;{c;{c;}c;}}c;{c;}")+L :-> fooNestedBlocks(I+L).
+L= [s([])>
+    nest([c;, nest([c;, nest([c;], [c;])], nil)], 
+         [c;, nest([c;], nil)])]
+Yes
+\end{verbatim}\end{quote}
+Vzhledem k~mo¾nosti parametrizace parseru \verb|nestedIn| jej lze
+snadno pou¾ít tak, ¾e bude zpracovávat vytvoøený syntaktický
+strom. V~následujícím pøíkladu se poèítá hloubka vnoøených blokù:
+\begin{quote}\begin{verbatim}
+  W :->
+        ((token("c;") <@ const(0))-funNBDepth-[0]
+          nestedIn
+           symbol("{") and symbol("}")).
+
+funNBDepth(A>B,X):-
+        maxList(A,MA), maxList(B,MB), max3(MA,MB,M), X is M+1.
+maxList([H|T],Max):- foldL(max3,H,T,Max).
+\end{verbatim}\end{quote}
+Místo struktury je vydáváno èíslo odpovídající hloubce daného
+bloku. Pøíkaz má iniciální hloubku 0 a~s~ka¾dou dal¹í úrovní se tato
+hodnota inkrementuje. Výstupem parseru je pak maximální poèet úrovní
+vnoøených blokù:
+\begin{quote}\begin{verbatim}
+?- s("{c;{c;{c;}c;}}c;{c;}")+L :-> fooNestedBlocksDepth(I+L).
+L= [s([])>3]
+Yes
+\end{verbatim}\end{quote}
+Tuto èást zakonèíme ukázkou pou¾ití kombinátoru \verb|nestedIn| v~parseru 
+vnoøeného komentáøe. Z~mnoha variant, které se 
+vyskytují v~rùzných programovacích jazycích, si vybereme komentáø
+jazyka Pascal:
+\begin{quote}\begin{verbatim}
+pascalNestedComment(W):-
+ W :-> brace(nonSymbols("{}")<*>
+              &>
+             nonSymbols("{}")-const(comment)-nil
+              nestedIn
+               symbol("{") and symbol("}")<?@>comment-id).
+\end{verbatim}\end{quote}
+První úroveò komentáøe je o¹etøena kombinátorem \verb|brace|. Dal¹í
+vnoøené bloky jsou ji¾ analyzovány pomocí \verb|nestedIn|. Struktura
+komentáøe se do výsledku parseru neukládá a~v~prùbìhu výpoètu je na
+ka¾dé úrovni vydáván pouze atom \verb|comment| --- ten je také
+výslednou hodnotou celého rozkladu:
+\begin{quote}\begin{verbatim}
+?- s("{ 
+|      This 
+|       {
+|        is
+|       } 
+|       { nested {comment}}!
+|     } 
+|     clrscr;")+L
+|       :-> pascalNestedComment.
+L= [s(" clrscr;")>comment]
+Yes
+\end{verbatim}\end{quote}
+%V slo¾itìj¹ích pøípadech, kdy je místo závorek pou¾it token skládající
+%se z nìkolika znakù, nelze jednodu¹e pou¾ít \verb|nonSymbols|, ale je
+%nutné implementovat parser pro vnitøek komentáøe. 
+
+%..............................................................................
+
+\section{Levá faktorizace}
+\index{tranformace!levá faktorizace}
+Kombinátorové vytváøení parserù je velmi podobné navrhování gramatik.
+Parsery, které jsou konstruovány v~této práci, svým zápisem nejen
+nahrazují specifikaci pomocí gramatik, ale jsou navíc také funkèními
+syntaktickými
+analyzátory. Blízkého vztahu mezi gramatikami a~\uv{kombinátorovými}
+parsery mù¾eme vyu¾ít a~osvojit si nìkteré transformace a~optimalizaèní
+techniky, které byly pùvodnì urèeny pro gramatiky, ale lze je
+stejným zpùsobem pou¾ít také pro parsery. Ze zøejmých dùvodù
+pro nás budou zajímavé pøedev¹ím transformace LL gramatik. Mezi tyto
+transformace patøí napøíklad levá faktorizace, rohová substituce
+nebo extrakce pravého kontextu. Kromì vý¹e uvedených existuje
+celá øada dal¹ích.
+
+V~øadì pøípadù mù¾eme pomocí nich jednoduchými transformacemi
+získat ekvivalentní efektivnìji pracující parsery. Vzhledem
+k~rozsahu této problematiky a~tématu této práce si zde uká¾eme
+pouze levou faktorizaci, se kterou se pøi konstrukci parserù
+setkáme nejèastìji. Problémùm s~levou rekurzí se
+budeme èásteènì vìnovat  v~èásti \ref{IteraceSeSemantickyRelevantnimiSeparatory}.
+
+Programátorskou techniku levé faktorizace parserù si uká¾eme na
+parseru jednoduchého aritmetického výrazu, který pøijímá souèin nebo podíl
+dvou èísel a~jeho úkolem je vydat výsledek výrazu dle pou¾ité operace:
+\begin{verbatim}
+fooLeftFactorization(W):-
+ W :->  (double <&>> symbolA("*") <&>> double
+          <:
+         double <&>> symbolA("/") <&>> double) <@ evalLeftFact.
+           
+evalLeftFact(X>(Op>Y),R):- Op == '*', R is X*Y ; R is X/Y.
+\end{verbatim}
+Parser je pøímým pøepisem úvodních vìt, v~nich¾ jsme specifikovali úèel
+jeho pou¾ití. Podívejme se na to, jak funguje~--- napøíklad pro vstup
+"3.14/2.72". Nejdøíve je prvním parserem v~alternativní kompozici
+pøijato èíslo "3.14". Pak v¹ak tato první alternativa sel¾e, proto¾e
+pøijímá souèin a~nikoli podíl. Dojde tedy k~navrácení a~v~druhé
+alternativì se analyzuje èíslo "3.14" zbyteènì znovu. Zbytek vstupu je
+ji¾ tentokrát zpracován bez problémù.
+
+Pøíèinu tohoto typu navracení mù¾eme z~parserù odstranit jejich levou
+faktorizací. Rozvìtvíme výpoèet a¾ v~místì, kde to má skuteèný význam:
+\begin{quote}\begin{verbatim}
+fooLeftFactorization(W):-
+ W :->  (double <&>>
+           (symbolA("*") <: symbolA("/"))
+                                <&>> double) <@ evalLeftFact.
+\end{verbatim}\end{quote}
+Tato varianta vydává stejné výsledky jako pùvodní parser. Na rozdíl od
+nìj v¹ak nedochází pøi jejím výpoètu k~navracení a~vstup je zpracován 
+v~lineárním èase. Faktorizace druhé èásti parseru sice nebyla nezbytnì
+nutná, ale jeho zápis zèitelnila.
+
+V~následujících kapitolách se budeme sna¾it vytváøet takové konstruktory
+parserù, které vyu¾ívají levou faktorizaci ji¾ ve své definici, aby
+jí programátor nemusel vìnovat pozornost v~takové míøe.
+
+Na pøíklad z~této èásti navá¾eme v~dal¹í kapitole, v~ní¾ se budeme
+vìnovat kromì jiného analýze aritmetických výrazù.
+
+\endinput
+-------------------------------------------------------------------------------

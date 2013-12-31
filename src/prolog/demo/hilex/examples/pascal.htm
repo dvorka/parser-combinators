@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HMTL using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT="#FFFF00" BGCOLOR="#000080">
+
+<PRE>
+<FONT FACE="COURIER NEW, ARIAL" SIZE="+0">
+<FONT COLOR="#C0C0C0"><I>{-----------------------------------------------------------------------------
+                           Program NOTEDIT
+
+                          Martin Dvorak  I8
+                                1995
+-----------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#C0C0C0"><I>{$A+,B-,D+,E+,F-,G-,I+,L+,N+,O-,P-,Q+,R+,S+,T-,V+,X+,Y+}</I></FONT>
+<FONT COLOR="#C0C0C0"><I>{$M 16384,0,655360}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>unit</B></FONT> PTisk<FONT COLOR="#FFFFFF">;</FONT>
+
+<FONT COLOR="#FFFFFF"><B>INTERFACE</B></FONT>
+
+<FONT COLOR="#FFFFFF"><B>uses</B></FONT> Crt<FONT COLOR="#FFFFFF">,</FONT>Dos<FONT COLOR="#FFFFFF">;</FONT>
+
+<FONT COLOR="#FFFFFF"><B>var</B></FONT> registr        <FONT COLOR="#FFFFFF">:</FONT> Registers<FONT COLOR="#FFFFFF">;</FONT>
+    i              <FONT COLOR="#FFFFFF">:</FONT> integer<FONT COLOR="#FFFFFF">;</FONT>
+
+ <FONT COLOR="#C0C0C0"><I>{ AH sluzba
+   DX cislo tiskarny }</I></FONT>
+
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Inicializuj_tiskarnu<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Posli_znak<FONT COLOR="#FFFFFF">(</FONT> znak<FONT COLOR="#FFFFFF">:</FONT>byte <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Roluj_min<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Hlava_home<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Nastav_graf_rezim_960<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Odroluj_sektor<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Odroluj_papir<FONT COLOR="#FFFFFF">;</FONT>
+
+
+<FONT COLOR="#FFFFFF"><B>IMPLEMENTATION</B></FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Inicializuj_tiskarnu<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+
+     registr<FONT COLOR="#FFFFFF">.</FONT>ah <FONT COLOR="#00FF00">:=</FONT> <FONT COLOR="#FFFFFF">$</FONT>01<FONT COLOR="#FFFFFF">;</FONT>
+     registr<FONT COLOR="#FFFFFF">.</FONT>dx <FONT COLOR="#00FF00">:=</FONT> <FONT COLOR="#FFFFFF">$</FONT>00<FONT COLOR="#FFFFFF">;</FONT><FONT COLOR="#C0C0C0"><I>{ cislo tiskarny }</I></FONT>
+
+     intr<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#FFFFFF">$</FONT>17<FONT COLOR="#FFFFFF">,</FONT>registr<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Posli_znak<FONT COLOR="#FFFFFF">(</FONT> znak<FONT COLOR="#FFFFFF">:</FONT>byte <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+
+     registr<FONT COLOR="#FFFFFF">.</FONT>ah <FONT COLOR="#00FF00">:=</FONT> <FONT COLOR="#FFFFFF">$</FONT>00<FONT COLOR="#FFFFFF">;</FONT>
+     registr<FONT COLOR="#FFFFFF">.</FONT>dx <FONT COLOR="#00FF00">:=</FONT> <FONT COLOR="#FFFFFF">$</FONT>00<FONT COLOR="#FFFFFF">;</FONT>
+     registr<FONT COLOR="#FFFFFF">.</FONT>al <FONT COLOR="#00FF00">:=</FONT> znak<FONT COLOR="#FFFFFF">;</FONT>
+
+     intr<FONT COLOR="#FFFFFF">(</FONT><FONT COLOR="#FFFFFF">$</FONT>17<FONT COLOR="#FFFFFF">,</FONT>registr<FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Roluj_min<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+ posli_znak<FONT COLOR="#FFFFFF">(</FONT> 10 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Hlava_home<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+ Posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>1b <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>Posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>3c <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Nastav_graf_rezim_960<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+ Posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>1b <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>Posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>4c <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT><FONT COLOR="#C0C0C0"><I>{ 960 $4c ,480 $4b}</I></FONT>
+ Posli_znak<FONT COLOR="#FFFFFF">(</FONT> 127 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>Posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>02 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Odroluj_sektor<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>var</B></FONT> i <FONT COLOR="#FFFFFF">:</FONT> byte<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+<FONT COLOR="#FFFFFF"><B>for</B></FONT> i <FONT COLOR="#00FF00">:=</FONT> 1 <FONT COLOR="#FFFFFF"><B>to</B></FONT> 8 <FONT COLOR="#FFFFFF"><B>do</B></FONT>
+ <FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+    <FONT COLOR="#C0C0C0"><I>{ nastav roztec vertikalni 1/216'' }</I></FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#FFFFFF">$</FONT>1b <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> <FONT COLOR="#C0C0C0"><I>{ $4a}</I></FONT><FONT COLOR="#FFFFFF">$</FONT>33 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT>  22 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+    <FONT COLOR="#C0C0C0"><I>{ roluj - vertikalni tabulator }</I></FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> 11 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+ <FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> 13 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> 13 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+    posli_znak<FONT COLOR="#FFFFFF">(</FONT> 13 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>procedure</B></FONT> Odroluj_papir<FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>begin</B></FONT>
+ Posli_znak <FONT COLOR="#FFFFFF">(</FONT> 12 <FONT COLOR="#FFFFFF">)</FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">;</FONT>
+<FONT COLOR="#C0C0C0"><I>{----------------------------------------------------------------------------------}</I></FONT>
+<FONT COLOR="#FFFFFF"><B>end</B></FONT><FONT COLOR="#FFFFFF">.</FONT>
+</FONT>
+</PRE>
+</BODY>
+</HTML>

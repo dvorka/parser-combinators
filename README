@@ -1,0 +1,25 @@
+./	
+	Kombinatory parseru.
+
+INSTALL
+	Instalacni instrukce.
+
+README.first
+	Tento soubor ctete jako prvni - obsahuje technicke poznamky 
+        a informace o adresarove strukture.
+
+src/
+	Zdrojove soubory knihovny.
+
+doc/
+	Dokumentace.
+
+Makefile
+	Soubor pro program make:
+		make install ... instalace
+		make doc     ... vygeneruje dokumentaci
+		make release ... provede kompletni clean a vytvori temer 
+                 		 vsechny generovane casti prace znovu
+                                 
+- EOF -
+ 

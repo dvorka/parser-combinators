@@ -1,0 +1,85 @@
+#------------------------------------------------------------------------------
+#
+#                       Configuration file for HILEX
+#
+#                    Languague: HILEX configuration file
+#
+#                             Martin Dvorak
+#                                 2000
+#------------------------------------------------------------------------------
+
+Setup( "Hilex 2 HTML *table*" )
+{
+ Prefix
+ =
+"<!-- This table was converted to HTML using HILEX -->
+<CENTER>
+<TABLE BORDER=0>
+<TR>
+ <TD WIDTH=\"500\" BGCOLOR=\"#717171\">
+ <FONT COLOR=\"#000080\">
+<PRE>
+";
+
+ Postfix
+ =
+"
+</PRE>
+</FONT>
+</TD>
+</TR>
+</TABLE>
+</CENTER>
+";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "KEYWORDS" )
+{
+ Descr="Action|Descr|Font|Size|Color|Underscore|Italic|Bold|";
+ Descr="RawBeg|RawEnd|Prefix|Postfix";
+                             
+ Color="#FFFF00";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "SYMBOL" )
+{
+ Descr="=|\{|\}|\(|\)|;";
+
+ RawBeg="<FONT COLOR=\"#FFFFFF\">";
+ RawEnd="</FONT>";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "COMMENTS" )
+{
+ Descr="#[^\n]*\n";
+
+ Color="#C0C0C0";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "BLOCK KEYWORD" )
+{
+ Descr="Element|Setup";
+
+ Color="BLACK";
+ Underscore="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "STRING" )
+{
+ Descr="\"((\\\")|[^\"])*\"";
+
+ Bold ="TRUE";
+}
+
+#- EOF ------------------------------------------------------------------------

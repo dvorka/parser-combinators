@@ -1,0 +1,10 @@
+./
+	Ladeni a profiling.  			
+
+debugger.pl
+	Metainterpret pro ladeni kombinatoru parseru.
+
+bench.pl
+	Predikaty urcene pro profiling.
+
+-EOF-

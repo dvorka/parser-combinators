@@ -1,0 +1,95 @@
+#------------------------------------------------------------------------------
+#
+#                       Configuration file for HILEX
+#
+#                    Languague: HILEX configuration file
+#
+#                             Martin Dvorak
+#                                 2000
+#------------------------------------------------------------------------------
+
+Setup( "Hilex 2 HTML page" )
+{
+
+ Prefix
+ =
+"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HTML using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT=\"#000080\" BGCOLOR=\"#717171\">
+
+<PRE>
+<FONT FACE=\"COURIER NEW, ARIAL\" SIZE=\"+0\">
+";
+
+ Postfix
+ =
+"</FONT>
+</PRE>
+</BODY>
+</HTML>
+";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "KEYWORDS" )
+{
+ Descr="Action|Descr|Font|Size|Color|Underscore|Italic|Bold|";
+ Descr="RawBeg|RawEnd|Prefix|Postfix";
+                             
+ Color="#FFFF00";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "SYMBOL" )
+{
+ Descr="=|\{|\}|\(|\)|;";
+
+ RawBeg="<FONT COLOR=\"#FFFFFF\">";
+ RawEnd="</FONT>";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "COMMENTS" )
+{
+ Descr="#[^\n]*\n";
+
+ Color="#C0C0C0";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "BLOCK KEYWORD" )
+{
+ Descr="Element|Setup";
+
+ Color="BLACK";
+ Underscore="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "STRING" )
+{
+ Descr="\"((\\\")|[^\"])*\"";
+
+ Bold ="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "ASCII code" )
+{
+ Descr="O'";
+                             
+ Color="#FFFF00";
+}
+
+#- EOF ------------------------------------------------------------------------

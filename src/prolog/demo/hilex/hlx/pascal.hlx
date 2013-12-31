@@ -1,0 +1,121 @@
+#------------------------------------------------------------------------------
+#
+#                       Configuration file for HILEX
+#
+#                               Languague: PASCAL
+#
+#                                 Martin Dvorak
+#                                     2000
+#------------------------------------------------------------------------------
+
+Setup( "Pascal 2 HTML page" )
+{
+ Prefix
+ =
+"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HMTL using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT=\"#FFFF00\" BGCOLOR=\"#000080\">
+
+<PRE>
+<FONT FACE=\"COURIER NEW, ARIAL\" SIZE=\"+0\">
+";
+
+ Postfix
+ =
+"</FONT>
+</PRE>
+</BODY>
+</HTML>
+";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "KEYWORDS" )
+{
+ Descr="[aA][nN][dD]|[aA][sS][mM]|[aA][rR][rR][aA][yY]|";
+ Descr="[bB][eE][gG][iI][nN]|[cC][aA][sS][eE]|[cC][oO][nN][sS][tT]|";
+ Descr="[cC][oO][nN][sS][tT][rR][uU][cC][tT][oO][rR]|";
+ Descr="[dD][eE][sS][tT][rR][uU][cC][tT][oO][rR]|[dD][iI][vV]|[dD][oO]|";
+ Descr="[dD][oO][wW][nN][tT][oO]|[eE][lL][sS][eE]|[eE][nN][dD]|";
+ Descr="[eE][xX][pP][oO][rR][tT][sS]|[fF][iI][lL][eE]|[fF][oO][rR]|";
+ Descr="[fF][uU][nN][cC][tT][iI][oO][nN]|[gG][oO][tT][oO]|[iI][fF]|";
+ Descr="[iI][mM][pP][lL][eE][mM][eE][nN][tT][aA][tT][iI][oO][nN]|";
+ Descr="[iI][nN]|[iI][nN][hH][eE][rR][iI][tT][eE][dD]|";
+ Descr="[iI][nN][lL][iI][nN][eE]|[iI][nN][tT][eE][rR][fF][aA][cC][eE]|";
+ Descr="[lL][aA][bB][eE][lL]|[lL][iI][bB][rR][aA][rR][yY]|";
+ Descr="[mM][oO][dD]|[nN][iI][lL]|[nN][oO][tT]|";
+ Descr="[oO][bB][jJ][eE][cC][tT]|[oO][fF]|[oO][rR]|";
+ Descr="[pP][aA][cC][kK][eE][dD]|[pP][rR][oO][cC][eE][dD][uU][rR][eE]|";
+ Descr="[pP][rR][oO][gG][rR][aA][mM]|[rR][eE][cC][oO][rR][dD]|";
+ Descr="[rR][eE][pP][eE][aA][tT]|[sS][eE][tT]|[sS][hH][lL]|";
+ Descr="[sS][hH][rR]|[sS][tT][rR][iI][nN][gG]|[tT][hH][eE][nN]|";
+ Descr="[tT][oO]|[tT][yY][pP][eE]|[uU][nN][iI][tT]|";
+ Descr="[uU][nN][tT][iI][lL]|[uU][sS][eE][sS]|[vV][aA][rR]|";
+ Descr="[wW][hH][iI][lL][eE]|[wW][iI][tT][hH]|[xX][oO][rR]";
+
+ Color="#FFFFFF";
+ Bold="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "IDENTIFIER" )
+{
+ Descr  ="[A-Za-z_][A-Za-z_0-9]*";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "SYMBOL" )
+{
+ Descr  ="\.|;|,|:|\[|\]|\{|\}|\(|\)|$|^";
+
+ Color="#FFFFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "OPERATOR" )
+{
+ Descr  ="<|>|<>|=|<=|>=|:=|@|\+|-|\*|/";
+
+ Color="#00FF00";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "COMMENTS" )
+{
+ Descr="\{[^\}]*\}";
+
+ Color="#C0C0C0";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "STRING" )
+{
+ Descr="\'(([^\'])|(\\\'))*\'";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "INTEGER OR CHAR CONSTANT" )
+{
+ Descr="#?[0-9]+";
+}
+
+#------------------------------------------------------------------------------
+
+Element("REAL CONSTANT")
+{
+ Descr="[0-9]+\.([0-9]*[Ee]-?\+?[0-9]+)?";
+}
+
+#------------------------------------------------------------------------------

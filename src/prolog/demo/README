@@ -1,0 +1,38 @@
+./
+	Ukazkove programy.
+
+charset/
+	Jednoducha ukazka pouziti modu 'encode' na prikladu prekodovavani
+        znakovych sad.
+
+expr/
+	Parsing vyrazu.
+
+filter/
+	Ukazka pouziti repeat-fail mutatoru pri vytvareni filtru
+        v knihovne kombinatoru parseru.
+
+hilex/
+	Program prevadejici zdrojove kody do HTML se syntax
+        highlightingem (Prolog, C, Java, Pascal,...).
+
+mkloader/
+	Program generujici zavadece knihovny kombinatoru parseru pro
+        ruznou hloubku v adresarove strukture.
+
+prologdoc/
+	Program pro vytvareni dokumentace projektu napsanych 
+        v jazyce Prolog.        	
+
+selfOff/
+      	Ukazka offline self aplikace konstruktoru parseru. 
+
+selfOn/
+      	Ukazka online self aplikace konstruktoru parseru. 
+
+vlnka/
+	Program pro vkladani znaku tilda, jenz zabranuji nezadoucimu 
+        zalamovani radku v LaTeXovych dokumentech.
+        
+-EOF-
+        

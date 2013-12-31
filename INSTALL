@@ -1,0 +1,22 @@
+
+				Kombinatory Parseru
+                               =====================
+                               
+ Instalace
+ =========
+ 
+ Pozadavky:
+  - operacni system Linux 2.x 
+    (gcc, make)
+  - interpret SWI Prolog 3.1.0 a novejsi 
+    (http://www.swi.psy.uva.nl/projects/SWI-Prolog/)
+  - 5 MB mista na disku
+
+ Instalacni instrukce:
+  Editujte soubor Makefile.common - je treba nastavit cestu k interpretu 
+  SWI Prolog.
+ 
+ Instalace:
+  make install
+
+- EOF -

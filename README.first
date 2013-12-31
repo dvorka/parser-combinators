@@ -1,0 +1,47 @@
+
+				Kombinatory Parseru
+                               =====================
+
+ Technicke poznamky
+ ==================
+	Prace byla vytvorena pod operacnim systemem Linux v interpretu 
+ SWI Prolog v3.1.0 (http://www.swi.psy.uva.nl/projects/SWI-Prolog/), ktery
+ je spousten s parametry:
+	pl -G0 -L0 -T0 ${@}
+
+ Poznamky ke zdrojovym souborum
+ ==============================
+ V kazdem adresari je soubor README, ktery popisuje jeho obsah.
+
+ Knihovna konstruktoru parseru je ulozena v adresari ./src/prolog/pc.
+ Podrobnejsi popis naleznete v souborech README.
+ 	Pro ladeni je k dispozici metainterpret, ktery se konzultuje
+ zaroven s knihovnou viz deBugger/0.
+	Dokumentace (ve formatech HTML, dvi a ps) je ulozena
+ v adresari ./doc.       
+
+ V adresari ./src/prolog/demo je nekolik samostatnych programu 
+ demonstrujicich pouziti knihovny.
+ 	Pro zkouseni jsou na zacatku prologovskych zdrojovych souboru 
+ v casti "Demo" predikaty s ukazkovym volanim. Jejich jmena zacinaji
+ obvykle go* (jako goExpr nebo  goGenerate) - podobne jako priklady z 
+ textu prace.
+  	Nakonzultovani prikladu lze obvykle provest take shellovym 
+ skriptem go.sh.
+
+ Zdrojove kody z textu prace jsou v adresari ./src/prolog/doc/*. Jsou 
+ rozdeleny do casti. Jednotlive casti lze konzultovat pomoci souboru:
+ 
+		./src/prolog/docI.pl  	... prvni cast
+		./src/prolog/docII.pl	... druha cast
+		./src/prolog/docIII.pl	... treti cast
+ resp. shellovych skriptu               
+		./src/prolog/goDocI.sh
+		./src/prolog/goDocII.sh
+		./src/prolog/goDocIII.sh
+  
+ 						Martin Dvorak
+
+  						mdvo4092@ss1000.ms.mff.cuni.cz
+
+- EOF -

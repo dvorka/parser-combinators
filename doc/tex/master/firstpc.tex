@@ -1,0 +1,596 @@
+\chapter{Konstruktory parserù}\label{KonstruktoryParseru}
+Tato kapitola je prvním seznámením s~kombinátorovým pøístupem konstrukce
+parserù. Na¹ím hlavním cílem bude pøedstavení základních my¹lenek
+a~zavedení dùle¾itých pojmù.
+
+Jak bylo zmínìno v~úvodu, pøípustná logická struktura vstupu parserù
+je definována gramatikou. Proto¾e prakticky nejpou¾ívanìj¹í tøídou
+gramatik jsou gramatiky bezkontextové, budeme vìnovat pozornost
+pøedev¹ím jim. Pro jejich reprezentaci je velmi èasto pou¾ívána 
+Backusova normální forma (Backus-Naurova forma), zkrácenì BNF. Necháme
+se tedy touto notací vést pøi budování základu knihovny. 
+
+Gramatiky jsou v~BNF vytváøeny pomocí operace øetìzení a~operace
+alternativy. Na¹ím prvním cílem tedy bude vytvoøení potøebných
+kombinátorù parserù, které budou odpovídat vý¹e uvedeným operacím.
+
+Nemalou pozornost vìnujeme také zpùsobu zápisu parserù. Pokusíme se o~to, 
+aby mìl co mo¾ná nejblí¾e k~deklarativní notaci gramatik. Na¹e
+úsilí bude smìøovat k~tomu, aby napøíklad pravidlu gramatiky zapsanému 
+v~BNF jako:
+\begin{quote}
+$<expr> ::= <term> <addop> <fact> | <fact>$
+\end{quote}
+odpovídal následující zdrojový kód parseru:
+\begin{quote}\begin{verbatim}
+ expr(W):- 
+  W :->     term <&> addop <&> fact <:> fact.
+\end{verbatim}\end{quote}
+Dosáhneme toho vhodným návrhem knihovny a~vyu¾itím prostøedkù,
+které nám ná¹ implemetaèní jazyk poskytuje.
+
+V~první èásti této kapitoly navrhneme vhodné rozhraní parserù, v~dal¹í
+vytvoøíme stavební kameny --- primitivní parsery a~nakonec si uká¾eme
+první zástupce kombinátorù nejen pro operace pou¾ívané v~BNF.
+
+% vedlej¹ím efektem je, ¾e parsery budou vypadat podobnì jako 
+% zápis v gramatice, ale nebude to zápis, ale program = parser
+        
+\input{interface}
+\input{tuple}
+\input{elemental}
+\newpage
+
+%..............................................................................
+
+\section{Konstruktory parserù}\label{castKonstruktoryParseru}
+V~této èásti si uká¾eme, jakým zpùsobem \uv{stmelit} základní bloky,
+kterými jsou primitiva, a~tak vytvoøit nové, mocnìj¹í parsery.
+
+Tuto úlohu vyøe¹íme pomocí speciálních predikátù vy¹¹ího øádu ---
+konstruktorù parserù. Uká¾eme si jejich pøíklady a~na jejich základì
+vytvoøíme taxonomii, která rozli¹í konstruktory parserù na
+kombinátory, mutátory a~generátory.
+
+%..............................................................................
+
+\subsection{Kombinátory parserù}\index{kombinátory}\index{konstruktory!kombinátory}
+První kategorií, se kterou se seznámíme, jsou kombinátory
+parserù. Kombinátory mají mezi konstruktory parserù výsadní postavení.
+Jsou ztìlesnìním samotné my¹lenky kombinátorového pøístupu pøi
+vytváøení parserù, která je prezentována v~této práci, a~jako takové
+mají mezi konstruktory nejpoèetnìj¹í zastoupení.
+
+Kombinátor je predikát provádìjící kompozici \emph{nìkolika} parserù,
+jejím¾ výsledkem je parser nový. Snad v~ka¾dé gramatice se objevuje
+zøetìzení, proto asi nejbì¾nìj¹í operací nad parsery je jejich
+sekvenèní kompozice. Definujme tedy kombinátor pro tento úèel:\index{<a>>@\verb+<&>>+}
+\begin{quote}\begin{verbatim}
+% <&>>(+Parser1, +Parser2, ?Wrapper)
+<&>>(P1,P2,I+L):-
+        I+L1 :-> P1,
+        <&>>^(P2,L1,L-[]).
+
+% <&>>^(+Parser2, +LosOfP1, -ComposedLosOfP1P2)
+<&>>^(_,[],D-D).
+<&>>^(P2,[N>R|L1s],L12-D):-
+        N+L2 :-> P2,
+        mapListDL(fstTuple *>* (const(R) *>* sndTuple),L2,L12-D_),
+        <&>>^(P2,L1s,D_-D).
+\end{verbatim}\end{quote}
+Kombinátor \verb|<&>>| postupnì aplikuje na vstup parsery $P1$ a~$P2$. Jejich výsledky potom zkombinuje.
+
+Na vstup $I$ je tedy nejdøíve aplikován parser $P1$. Jeho výstupem je
+seznam úspì¹ných rozkladù $L1$ délky $n$. Ten mù¾e obsahovat nìkolik,
+jednu nebo dokonce ¾ádnou derivaci. Jak bylo uvedeno, ka¾dá polo¾ka
+tohoto seznamu se skládá z~nezpracovaného zbytku vstupu a~výsledku:
+$$NotParsedRest1>Result1$$ Pomocný predikát \verb|<&>>^| aplikuje na
+ka¾dý zbytek vstupu $NotParsedRest1$ parser $P2$. Ka¾dou aplikací
+druhého parseru na zbytek v~$i$-té polo¾ce $L1$ získává nový seznam
+$L2_i$. Následnì provede zkombinování výsledkù obou parserù pomocí
+predikátu \verb|mapListDL| a~tím vytvoøí seznam $L12_i$. Schematicky má
+polo¾ka seznamu $L12_i$ tvar: $$NotParsedRest12>(Result1>Result2)$$
+
+Predikát \verb|mapListDL| se od \verb|mapList| li¹í pouze tím, ¾e jeho
+výstupem je seznam v~rozdílové reprezentaci. Rozdílové seznamy
+$L12_1$,\dots ,$L12_n$ musí být ve výsledném seznamu $L$ zøetìzeny 
+a~právì rozdílová reprezentace nám umo¾ní efektivní provedení této
+operace.
+
+\input{smile}
+\hskip 1cm
+
+Uzavøeme téma operátorové notace a~obrátíme nyní svou pozornost zpìt k~Backusovì normální formì a~definujeme kombinátor parserù, který
+odpovídá operaci alternativní kompozice:\index{<:>@{\tt <:>}}
+\begin{quote}\begin{verbatim}
+% <:>(+Parser1, +Parser2, ?Wrapper)
+<:>(P1,P2,I+L):-
+        I+L1 :-> P1,
+        I+L2 :-> P2,
+        append(L1,L2,L).
+\end{verbatim}\end{quote}
+Kombinátor pro alternativní kompozici aplikuje na stejný vstup $I$
+jak parser $P1$ tak $P2$ a~jejich seznamy úspì¹ných rozkladù zøetìzí
+do jednoho výsledného seznamu $L$.
+
+Dùle¾itost kombinátoru \verb|<:>| tkví pøedev¹ím v~tom, ¾e umo¾òuje do
+parserù vnést \emph{nedeterminismus}. Pomocí kombinátoru alternativní
+kompozice lze prozkoumat nìkolik cest výpoètu. Jeho pou¾ití rozvìtvuje
+výpoèet do dvou cest --- jedné parseru $P1$ a~druhé parseru $P2$. 
+Uka¾me si to na definici velmi jednoduchého parseru pro rozpoznávání 
+písmen: 
+\begin{quote}\begin{verbatim}
+letter(W):-
+ W :-> 
+        (lower <:> upper).
+\end{verbatim}\end{quote}
+Parser \verb|letter| aplikuje na vstup pomocí kombinátoru alternativní
+kompozice dva parsery. Proto¾e jak \verb|lower| tak \verb|upper| vrací
+v~pøípadì úspìchu nejvý¹e jednu derivaci, také \verb|letter| vydá
+strukturu LOS nejvý¹e s~jednou polo¾kou nebo» jazyky pøijímané parsery
+\verb|lower| a~\verb|upper| jsou disjunktní.
+
+Obecnì v¹ak jazyky pøijímané parsery $P1$ a~$P2$ disjunktní být
+nemusejí a~mù¾eme tedy získat pro jednu sentenci hned nìkolik
+správných rozkladù. Tím se koneènì vysvìtluje i~dùvod zavedení
+\emph{seznamu} úspì¹ných rozkladù pro reprezentaci výstupu parserù.
+
+% Zmínìní mo¾nosti reprezenace LOS jako rozdílového seznamu
+
+Pøedveïme si to na parseru pro pøirozená èísla, který vyu¾ívá
+nedeterminismu ve své rekurzivní definici:
+\begin{quote}\begin{verbatim}
+nat(W):- 
+ W :->
+        (digit <&>> nat 
+          <:>
+         epsilon).
+\end{verbatim}\end{quote}
+Pøi ka¾dém pou¾ití parseru \verb|nat| je mo¾nost ve výpoètu buï pokraèovat,
+pokud následují na zaèátku vstupu dal¹í èíslice, nebo výpoèet ukonèit
+pomocí primitiva \verb|epsilon|, které v¾dy uspìje. Bez kombinátoru
+alternativní kompozice by bylo mo¾né vytvoøit pouze parser pro nìjaký
+fixní poèet polo¾ek, zatímco s~ním mù¾eme definovat \verb|nat|, který
+pøijímá pøirozená èísla s~dopøedu neznámým poètem cifer. A~je¹tì
+pøíklad:
+\begin{quote}\begin{verbatim}
+?- "256"+L :-> nat.
+L = [s("")> (O'2> (O'5> (O'6>[]))),
+|    s("6")> (O'2> (O'5>[])),
+|    s("56")> (O'2>[]),
+|    s("256")>[]]
+Yes
+\end{verbatim}\end{quote}
+Získali jsme ètyøi mo¾né rozklady ulo¾ené v~\emph{seznamu} úspì¹ných
+rozkladù. V~pøíkladu si v¹imnìme toho, ¾e výsledky jsou dle
+úmluvy uspoøádány podle délky zpracovaného vstupu.
+
+Dále se zde setkáváme poprvé s~tím, ¾e za nìkterých okolností mù¾eme
+získávat kromì maximální derivace je¹tì nezanedbatelné mno¾ství
+dal¹ích derivací, které nás ve skuteènosti nezajímají. První
+konstruktory øe¹ící tento problém navrhneme ji¾ v~následující èásti.
+
+Proto¾e u¾ máme vytvoøeny ekvivalenty dvou operací pou¾ívaných 
+v~Backusovì normální formì, mù¾eme si na pøíkladu
+pøevodu pravidla gramatiky ukázat, jak se nám
+podaøilo realizovat to, co jsme si v~úvodu této
+kapitoly pøedsevzali.
+
+\subsubsection*{Pøíklad:}\vskip -3mm
+Pøevodem následujícího pravidla gramatiky zapsaného v~BNF:
+\begin{quote}
+$<nat> ::= <digit> <nat> | <digit>$
+\end{quote}
+získáme parser:
+\begin{quote}\begin{verbatim}
+nat(W):- 
+ W :->    digit <&>> nat <:> digit.
+\end{verbatim}\end{quote}
+Vidíme, ¾e zápis parseru je skuteènì velmi podobný deklarativní notaci
+gramatik. Podílí se na tom jak návrh rozhraní, tak zavedení vlastních 
+operátorù a~vhodná volba jejich priorit. V~tomto trendu budeme pokraèovat 
+i~nadále a~v~dal¹ím textu se pøi vytváøení konstruktorù parserù necháme 
+inspirovat kupøíkladu notací pou¾ívanou v~regulárních výrazech.
+
+%..............................................................................
+
+\subsection{Mutátory parserù}\index{konstruktory!mutátory}\index{mutátory}
+Pøi seznamování se s~konstruktory parserù pokraèujme pøedstavením jejich 
+druhé kategorie, kterou jsou mutátory. Jak samotný název napovídá, mutátor
+vytváøí z~ji¾ existujícího parseru, který je jeho parametrem, parser nový,
+jen¾ je nìjakým zpùsobem modifikován --- vytváøí tedy jeho mutaci.
+
+Nejdøíve vytvoøíme dva mutátory upravující daný parser tak, ¾e ten
+sice pracuje stejnì, ale svùj výsledný seznam úspì¹ných rozkladù
+nìjakým zpùsobem ze¹tíhluje.
+
+Prvním z~nich je mutátor nazývaný \uv{diamant}. Jak jsme se ji¾
+pøesvìdèili, mù¾e seznam úspì¹ných rozkladù obsahovat vìt¹í poèet
+derivací. Obvykle jsou nezbytné pro dal¹í zpracování vstupu, av¹ak v~urèité fázi se pro nás mohou stát ji¾ nezajímavými a~potøebovali
+bychom se jich zbavit. 
+
+Obvykle jedinou relevantní derivací ve struktuøe LOS je maximální
+derivace, stejnì jako tomu bylo v~pøíkladì pou¾ití parseru \verb|nat|.
+Pro takové oøíznutí seznamu úspì¹ných rozkladù nám bude slou¾it mutátor
+\verb|<>|: \index{<>@{\tt <>}}
+\begin{quote}\begin{verbatim}
+% <>(+Parser, ?Wrapper)
+<>(P,I+L):-
+ I+L_ :-> P,
+        ( L_==[] -> L=[] ; L_=[L__|_],L=[L__]).
+\end{verbatim}\end{quote}
+Pou¾itím diamantu získáme parser vydávající seznam úspì¹ných
+rozkladù obsahující nejvý¹e jednu derivaci. Tato derivace
+je získána v~pøípadì úspìchu z~hlavy pùvodní struktury LOS.
+
+Slíbeným druhým mutátorem je \verb|whole|. Modifikací daného parseru
+vytvoøí nový parser, který pracuje stejným zpùsobem a~navíc zaruèuje,
+¾e ka¾dá derivace obsa¾ená ve struktuøe LOS zpracovala celý vstup:
+\index{whole@{\tt whole}}
+\begin{quote}\begin{verbatim}
+% whole(+Parser, ?Wrapper)
+whole(P,I+L):-
+ I+Lt :-> P,
+        filter(fstTupleSEmpty,Lt,L).
+\end{verbatim}\end{quote}
+Od parseru $P$ je získán seznam úspì¹ných rozkladù. Predikátem
+vy¹¹ího øádu \verb|filter| jsou z~nìj odstranìny pomocí predikátu
+\verb|fstTupleEmpty| derivace, které nezpracovaly celý vstup.
+
+V~pøedchozích èástech jsme zkonstruovali nìkolik parserù
+u~nich¾ se projevila urèitá vada spoèívající v~tom, ¾e
+jejich výsledky sice správnì zachycovaly strukturu vstupního textu,
+ale jejich syntaktický strom nebyl pøíli¹ vhodný pro dal¹í zpracování.
+Za v¹echny uveïme parser \verb|num|. Spí¹e ne¾ n-tice cifer tvoøící
+pøijaté èíslo by jako výsledek parseru byla vhodnìj¹í samotná hodnota
+tohoto èísla. Podobných pøíkladù bychom jistì na¹li je¹tì
+mnoho. 
+
+Tento typ problému je jako ¹itý na míru øe¹ení právì pomocí
+mutátorù. Vytvoøíme tedy dùle¾itý mutátor parserù, 
+jen¾ transformuje parser tak, ¾e ten na svoje výsledky aplikuje danou 
+sémantickou operaci ve formì predikátu:\index{<a@{\tt <"@}}
+\begin{quote}\begin{verbatim}
+% <@(+Parser, +Function, ?Wrapper)
+<@(P,F,I+L):-
+        I+L_ :-> P,
+        mapList(fstTuple *>* (F =-> sndTuple),L_,L).
+\end{verbatim}\end{quote}
+Mutátor nejprve aplikuje na vstup parser $P$. Následnì na výsledek v~ka¾dé
+polo¾ce seznamu úspì¹ných rozkladù aplikuje pomocí predikátu vy¹¹ího
+øádu \verb|mapList| daný predikát $F$. První argument \verb|mapList| nejdøíve
+pomocí selektoru \verb|sndTuple| vyjme z~derivace $NotParsed>Result$
+druhou polo¾ku tj. výsledek parseru a~na nìj aplikuje daný predikát. Z~výsledku aplikace a~nezpracovaného zbytku vstupu je pomocí
+konstruktoru dvojice \verb|*>*/2| následnì vytvoøena opìt polo¾ka
+struktury LOS. Výsledný seznam $L$ má stejnou délku a~li¹í se od
+pùvodního v~tom, ¾e na v¹echny výsledky byl aplikován predikát $F$.
+
+Predikát \verb|<@| je rovnì¾ definován jako operátor a~jeho priorita
+je zvolena tak, aby byla minimalizována nutnost závorkování.
+
+% dozrál èas
+Právì definovaný mutátor vyu¾ijeme k~definovaní parseru \verb|digit|, jeho¾
+výsledkem bude hodnota pøijaté èíslice. Pøevod je realizován v~predikátu \verb+ascii2Atom+:
+\begin{quote}\begin{verbatim}
+digit(W):-
+ W :->
+        (fulfil(isDigit) <@ ascii2Atom).
+\end{verbatim}\end{quote}
+Zatím je¹tì poseèkáme s~novou verzí parseru pøirozených èísel a~radìji
+vytvoøíme parser souøadnice bodu v~rovinì reprezentovaný jako
+dvì èísla oddìlená èárkou a~uzavøená v~hranatých závorkách ---
+poslou¾í nám jako inspirace pøi vytváøení dal¹ích kombinátorù:
+\begin{quote}\begin{verbatim}
+point2D(W):-
+ W :->
+        (symbol("[")
+          <&>>
+         nat <&>> symbol(",") <&>> nat
+          <&>>
+         symbol("]")).
+\end{verbatim}\end{quote}
+V~mnoha oblastech, a» u¾ v~matematice èi v~programování, je èasto
+pou¾íváno pro strukturování zápisu uzavírání jeho èástí mezi dva
+symboly, jen¾ mají povahu závorek. Mù¾e jít kupøíkladu o~dvojici
+souøadnic v~pøíkladu nebo o~argumenty prologovské struktury, jen¾ jsou
+ohranièeny dvojicí \verb|(| a~\verb|)|. Funkci tìchto symbolù v¹ak po
+zpracování parserem pøebírá syntaktický strom a~tak je jejich dal¹í
+uchovávání ve výsledku zpravidla zbyteèné.
+
+Zmínìná konstrukce je natolik bì¾ná, ¾e se vyplatí vytvoøit dva nové
+kombinátory, jen¾ následnì umo¾ní ignorovat závorky a~jim podobné
+pøebyteèné symboly a~do výsledku je neukládat. Pomù¾e nám pøi tom
+právì definovaný mutátor pro aplikaci sémantické akce:\index{<a@\verb+<&+}
+\begin{quote}\begin{verbatim}
+% <&(+Parser1, +Parser2, ?Wrapper)
+<&(P1,P2,W):-
+ W :->
+        (P1 <&>> P2 <@ fstTuple).
+\end{verbatim}\end{quote}
+Na vstup jsou sice aplikovány oba parsery, pomocí selektoru \verb|fstTuple|
+je ale výsledek druhého parseru z~výsledku odstranìn.
+Výsledkem sekvenèní kompozice parserù $P1$ a~$P2$ provedené
+kombinátorem \verb|<&| jsou tedy derivace obsahující pouze výsledek
+parseru $P1$ a~nezpracovaný zbytek vstupu odpovídající aplikaci
+obou parserù. Parser $P2$ tedy zpracovává èást 
+vstupu, napø. závorku, ale ta se ve výsledném syntaktickém stromu
+neobjeví.\index{&>@\verb+&>+}
+\begin{quote}\begin{verbatim}
+% &>(+Parser1, +Parser2, ?Wrapper)
+&>(P1,P2,W):- 
+ W :-> 
+        (P1 <&>> P2 <@ sndTuple).
+\end{verbatim}\end{quote}
+Kombinátor \verb|&>| je symetrickou variantou k~\verb|<&| ---
+rovnì¾ aplikuje na vstup jak parser $P1$ tak $P2$, v~derivacích
+v¹ak na rozdíl od \verb|<&| ignoruje výsledek parseru $P1$.
+
+Zajdeme je¹tì dál a~definujeme kombinátor speciálnì
+pro uzávorkované výrazy:\index{enclosedIn@{\tt enclosedIn}}
+\begin{quote}\begin{verbatim}
+enclosedIn(P,SO and SC,W):-
+ W :->
+        (SO &> P <& SC).
+\end{verbatim}\end{quote}
+Parametr $SO$ resp. $SC$ je parserem sentence, která 
+otevírá resp. uzavírá blok. $P$~je parserem samotného uzávorkovaného 
+výrazu a~jeho výsledek tvoøí výstup parseru, jen¾ kombinátor 
+\verb|enclosedIn| vytváøí.
+
+V~knihovnì kombinátorù jsou pro nejpou¾ívanìj¹í typy závorek pøipraveny 
+odpovídající kombinátory definované pomocí \verb|enclosedIn|.\index{parentheses@{\tt parentheses}}\index{brackets@{\tt brackets}}\index{brace@{\tt brace}}\index{angled@{\tt angled}}
+
+Pøínos tìchto novì zavedených kombinátorù je ve dvou vìcech. Jednak 
+zèitelòují vytváøený zdrojový kód a~dále umo¾òují ze¹tíhlovat 
+seznam úspì¹ných rozkladù a~tím otevírají cestu k~efektivnìj¹ím parserùm:
+\begin{quote}\begin{verbatim}
+parentheses(P,W):-
+        W :-> P enclosedIn symbol("(") and symbol(")").        
+brackets(P,W):-
+        W :-> P enclosedIn symbol("[") and symbol("]").        
+brace(P,W):-
+        W :-> P enclosedIn symbol("{") and symbol("}").        
+angled(P,W):-
+        W :-> P enclosedIn symbol("<") and symbol(">").        
+\end{verbatim}\end{quote}
+nebo také:
+\begin{quote}\begin{verbatim}
+prologEnvelope(P,W):-
+        W :-> P enclosedIn (symbol(":") &> symbol("-")) 
+                             and
+                            symbol(".").
+\end{verbatim}\end{quote}
+Nejen pøi analyzování zdrojových textù se èasto setkáváme s~tím, ¾e
+chceme pøijmout statický øetìzec, jakým je napøíklad klíèové
+slovo. Jednotky vstupu, které jsou z~hlediska syntaktické analýzy dále
+nedìlitelné, zde bývají obvykle nazývány \emph{tokeny}. Pøíkladem mù¾e být
+øetìzec \verb|":-"| v~kombinátoru \verb|prologEnvelope|. Zkonstruujme
+tedy parser pro tento úèel a~nazvìme jej právì \verb|token|:\index{token@{\tt token}}
+\begin{quote}\begin{verbatim}
+% token(+String, ?Wrapper)
+token([H|T],W):-
+        W :-> (symbol([H]) <&>> token(T) <@ tuple2List).       
+token([],W):-
+        W :-> epsilon.       
+\end{verbatim}\end{quote}
+Parser \verb|token| pøijímá daný øetìzec, jen¾ je v~pøípadì úspìchu
+jedinou derivací struktury LOS. Aby mohl být výsledek vydán jako
+øetìzec, konvertujeme n-tici v~prùbìhu výpoètu na seznam pomocí
+predikátu \verb+tuple2List/2+. Seznam je standardní datovou strukturou 
+jazyka Prolog, a~proto je v~mnoha situacích
+reprezentace výsledku v~této formì z~hlediska dal¹ího zpracování
+nejvýhodnìj¹í. Proto definujme variantu kombinátoru sekvenèní kompozice
+pro tento pøípad:\index{<a>@\verb+<&>+}
+\begin{quote}\begin{verbatim}
+% <&>(+Parser1, +Parser2, ?Wrapper)
+<&>(P1,P2,W):-
+ W :->
+        (P1 <&>> P2 <@ tuple2List).
+\end{verbatim}\end{quote}
+Koneènì máme pøipraveno v¹e potøebné, abychom mohli definovat parser
+pro pøirozená èísla, jen¾ byl zmínìn nìkolikrát v~prùbìhu této èásti:
+\begin{quote}\begin{verbatim}
+% natural(?Wrapper)
+nat(W):-
+        W :-> ( digit <&> nat <:> epsilon <> ).
+natural(W):-
+        W :-> ( digit <&> nat <@ foldL(evalNatural,0) ).
+
+evalNatural(Acc,I,Result):-
+        Result is Acc*10 + I.
+\end{verbatim}\end{quote}
+Parser \verb|natural| pøijímá pøirozené èíslo a~jako výsledek vydává
+jeho hodnotu. Výsledný seznam úspì¹ných rozkladù obsahuje nejvý¹e
+jednu derivaci. Reprezentace výsledku \verb|nat| ve formì seznamu
+umo¾ní výpoèet hodnoty èísla pomocí \verb|foldL/4|. Pou¾itím novì
+definovaných konstruktorù \verb|<&>|, \verb|<>| a~\verb|<@| jsme
+dosáhli praktické pou¾itelnosti tohoto parseru.
+
+Tuto èást zakonèíme inovovanou definicí motivaèního pøíkladu,
+který stál na jejím poèátku:
+\begin{quote}\begin{verbatim}
+point2D(W):-
+ W :->
+        brackets(natural <&>> symbol(",") &> natural).
+\end{verbatim}\end{quote}
+a~pøíkladem jejího pou¾ití:
+\begin{quote}\begin{verbatim}
+?- s("[12,36]")+L :-> point2D.
+L= [s([])> (12>36)]
+Yes
+\end{verbatim}\end{quote}
+
+%..............................................................................
+
+\subsection{Generátory parserù}\index{konstruktory!generátory}\index{generátory}
+Tøetí a~poslední kategorií konstruktorù jsou generátory
+parserù. Typicky jsou to predikáty vy¹¹ího øádu umo¾òující
+automatizované vytváøení parserù, jen¾ na rozdíl od dvou pøedchozích
+kategorií v~rámci své práce neprovádìjí aplikování parserù, nýbr¾
+pou¾ívají parsery a~jejich konstruktory pouze jako
+\uv{stavební materiál}. Generátory v~této práci se od generátorù
+pou¾ívaných v~rùzných nástrojích pro vytváøení parserù 
+li¹í v~tom, ¾e jednak vyu¾ívají pøi své práci ¹ir¹í
+spektrum kombinátorù a~dále má jejich pou¾ití zpravidla \uv{online} 
+charakter~--- vygenerovaný parser obvykle není po svém zkonstruování 
+ukládán pro pozdìj¹í pou¾ití, ale je okam¾itì aplikován.
+
+Prvním zástupcem této kategorie, kterého si uká¾eme je velmi jednoduchý
+generátor, jen¾ vytváøí nové parsery øetìzením pomocí daného
+konstruktoru s~pravou asociativitou. Je parametrizován jednak 
+kombinátorem, který má být
+pro øetìzení pou¾it, dále pak seznamem samotných parserù. Definujeme
+jej ve dvou variantách --- první bez terminátoru:\index{convoy@\verb+convoy+}
+\begin{quote}\begin{verbatim}
+% convoy(+Binder, +ListOfParsers, -Convoy)
+convoy(_,[P],P).
+convoy(B,[H|T],Convoy):-
+        Convoy=..[B,H,TConvoy],
+        convoy(B,T,TConvoy).
+convoy(_,[],terminate).
+\end{verbatim}\end{quote}
+a~druhé s~ním:
+\begin{quote}\begin{verbatim}
+% convoy(+Binder, +Terminator, +ListOfParsers, -Convoy)
+convoy(B,T,Ps,C):-
+        foldR(convoy_(B),T,Ps,C).
+\end{verbatim}\end{quote}
+Vstupním parametrem obou generátorù je jednak vý¹e zmínìný kombinátor
+$Binder$ a~dále seznam parserù $ListOfParsers$. Parametr $Terminator$ 
+ve~druhé variantì je parser, který se má stát èlánkem uzavírajícím
+vytváøený øetìzec. Výsledkem volání predikátu je vygenerovaný parser
+$Convoy$. Vyu¾ijeme nyní \verb|convoy| k~definici dvou speciálnìj¹ích
+generátorù. 
+
+Prvním z~nich je \verb|sequence| vytváøející z~mno¾iny parserù jejich
+sekvenèní kompozici:\index{sequence@\verb+sequence+}
+\begin{quote}\begin{verbatim}
+% sequence(+ListOfParsers, -Convoy)
+sequence(Ps,C):-
+        convoy(<&>,Ps,C).
+
+% sequence(+ListOfParsers, +Terminator, -Convoy)
+sequence(Ps,T,C):-
+        convoy(<&>,T,Ps,C).
+\end{verbatim}\end{quote}
+Opìt je zaveden ve dvou variantách li¹ících se pou¾itím terminátoru.
+Jeho parametry mají stejný význam jako v~pøípadì generátoru \verb|convoy|.
+
+Slibovanou druhou aplikací generátoru \verb|convoy| je \verb|choice|
+vytváøející alternativní kompozici daných parserù:\index{choice@\verb+choice+}
+\begin{quote}\begin{verbatim}
+% choice(+ListOfParsers, -Convoy)
+choice(Ps,C):-
+        convoy(<:>,Ps,C).
+
+% choice(+ListOfParsers, +Terminator, -Convoy)
+choice(Ps,T,C):-
+        convoy(<:>,T,Ps,C).
+\end{verbatim}\end{quote}
+Specializované generátory \verb+sequence+ a~\verb+choice+ jsme zavedli, 
+proto¾e
+kombinátory \verb+<&>+ a~\verb+<:>+ patøí mezi nejpou¾ívanìj¹í. 
+Co se týèe ostatních
+kombinátorù, \verb+convoy+ lze zpravidla pou¾ít bez problémù, nebo» v¹echny
+kombinátory definované jako operátory jsou pravì asociativní.
+
+Pou¾ití tìchto generátorù si mù¾eme pøedstavit v~situacích, kdy nejdøíve
+pøichází definice dat, je¾ obsahuje napøíklad specifikaci klíèových
+slov, povolených separátorù a~podobnì, a~za ní teprve následuje samotný
+text urèený ke zpracování. Analýzou èásti definující pøíchozí data se získají
+parametry pro generátory, s~jejich¾ pomocí se \uv{online} vytvoøí parser
+pro tyto struktury, který lze vzápìtí pou¾ít.
+
+\vskip 3mm
+\subsubsection*{Pøíklad:}\vskip -3mm
+Na závìr této èásti vytvoøíme \uv{offline} generátor
+parseru pro pravidlo gramatiky v~Backus-\-Naurovì formì.
+
+\noindent
+\vskip 1mm
+Nech» jsou v~nìm terminální symboly reprezentovány jako øetìzce
+znakù a~èíslic:
+\begin{quote}\begin{verbatim}
+terminal(W):-
+ W :->  (fulfil(isDigitChar_) <&> terminal
+          <:>
+         fulfil(isDigitChar_) <&> epsilon).
+\end{verbatim}\end{quote}
+a~neterminální symboly jako øetìzce uzavøené mezi znaky \verb+<+ a~\verb+>+:
+\begin{quote}\begin{verbatim}
+nonTerminal(W):-
+ W :->  (angled(terminal) <@ mkNonTerminal).
+\end{verbatim}\end{quote}
+Pravidlo se skládá z~hlavy a~tìla, které jsou oddìleny tokenem \verb+"::="+:
+\begin{quote}\begin{verbatim}
+rule(W):-
+ W :->  ((whole nonTerminal <&>>
+          (token(" ::= ") &> (ruleBody <@ choice)) <& symbol(".")
+         ) <@ mkRule).
+\end{verbatim}\end{quote}
+V~hlavì pravidla je v¾dy neterminál, zatímco tìlo je tvoøeno seznamem
+alternativ oddìlených tokenem \verb+"|"+:
+\begin{quote}\begin{verbatim}
+ruleBody(W):-
+ W :->  (((ruleAlt <@ sequence) <& symbol("|")) <&> ruleBody
+          <:>
+         ruleAlt <&> epsilon <@ sequence).
+\end{verbatim}\end{quote}
+kde jsou jednotlivé alternativy tvoøeny posloupností terminálù a~neterminálù:
+\begin{quote}\begin{verbatim}
+ruleAlt(W):-
+ W :->  (minals <&> (symbol(" ") &> ruleAlt)
+          <:>
+         minals <&> epsilon
+          <:>
+         symbol(" ") <@ mkEpsilon).
+
+minals(W):-
+ W :-> ((terminal<@ mkTerminal)<:>nonTerminal).
+\end{verbatim}\end{quote}
+Z~pravidla v~Backus-Naurovì formì je vygenerován zdrojový text
+parseru. Ten lze následnì zavést do interpretu a~pou¾ít pro
+analýzu jazyka definovaného pravidlem. Pøesnìji øeèeno,  
+pravidlo je pøelo¾eno na parser --- 
+výsledek analýzy pravidla provádìné parserem není syntaktický strom,
+ale kód parseru pro jazyk pøijímaný pravidlem.
+\footnote{Nìkdy bývá tento pøístup nazýván \uv{offline self application}.}
+
+\noindent
+Generátor \verb+rule+ mù¾e být pou¾it tøeba takto:
+\begin{quote}\begin{verbatim}
+?- s("<block> ::= begin <block> end| .")+L :->
+        rule.
+L= [s([])> (block:-token("begin")<&>block<&>token("end")<:>epsilon)]
+Yes
+\end{verbatim}\end{quote}
+
+\vskip 1cm
+
+Tento oddíl vìnovaný generátorùm parserù ukonèil èást, která byla
+úvodem do svìta konstruktorù parserù a~mìla spí¹e seznamovací
+charakter. Nicménì jsme v~ní polo¾ili celkem solidní základ pro na¹i
+dal¹í práci, na nìm¾ bude mo¾né dále stavìt.
+
+Konkrétnì jsme se seznámili s~filozofií techniky kombinátorového
+vytváøení parserù, kterou je \uv{ruèní} konstruování parserù pomocí
+vhodných kombinátorù, mutátorù a~generátorù. Konstruktory jsou
+definovány takovým zpùsobem, aby jejich vhodnou parametrizací bylo
+mo¾né rychle vytváøet efektivnì fungující parsery. Na¹ím cílem je
+vytvoøit sadu právì takových konstruktorù.
+
+Dále jsme si ukázali, jak pøínosné je pou¾ití u¾ivatelsky definovaných
+operátorù, které nám umo¾nily pøehledný zápis. Pøíklad v~èásti vìnované
+kombinátorùm naznaèil, ¾e v~urèitém smyslu mù¾e zápis parseru
+nahrazovat specifikaci pomocí gramatiky.
+
+Parsery je tak mo¾né vytváøet stejnì snadno, jako bychom konstruovali
+gramatiku. Její zápis je toti¾ v~tomto pøípadì zároveò funkèním
+parserem.
+
+V~následujících kapitolách se pustíme do vytváøení dal¹ích
+kombinátorù, mutátorù a~generátorù pro typické úlohy syntaktické
+analýzy tak, jak to bylo nastínìno zde.
+
+\endinput
+-------------------------------------------------------------------------------

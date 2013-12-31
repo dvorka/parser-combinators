@@ -1,0 +1,5 @@
+#! /bin/bash
+
+pl -G0 -L0 -T0 ${@}
+
+# EOF

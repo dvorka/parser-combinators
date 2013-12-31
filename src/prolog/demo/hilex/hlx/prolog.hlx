@@ -1,0 +1,124 @@
+#------------------------------------------------------------------------------
+#
+#                       Configuration file for HILEX
+#
+#                           Languague: Prolog 
+#
+#                              Martin Dvorak
+#                                   2000
+#------------------------------------------------------------------------------
+
+Setup( "Prolog 2 HTML page" )
+{
+ Prefix
+ =
+"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">
+<HTML>
+<HEAD>
+ <!-- This Web page was converted to HTML using HILEX -->
+ <TITLE>Page converted by HILEX</TITLE>
+</HEAD>
+<BODY TEXT=\"#FFFF00\" BGCOLOR=\"#000080\">
+
+<PRE>
+<FONT FACE=\"COURIER NEW, ARIAL\" SIZE=\"+0\">
+";
+
+ Postfix
+ =
+"</FONT>
+</PRE>
+</BODY>
+</HTML>
+";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "KEYWORDS" )
+{
+ Descr="abort|append|arg|atomic|atom|bagof|break|call|clause|consult|";
+ Descr="display|fail|false|functor|get0|get|halt|integer|is|length|";
+ Descr="listing|name|nl|nonvar|not|print|put|read|repeat|seeing|seen|see|";
+ Descr="setof|skip|tab|telling|tell|told|true|var|write";
+
+ Color="#FFFFFF";
+ Bold ="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "IDENTIFIER" )
+{
+ Descr  ="[A-Za-z_][A-Za-z_0-9]*";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "PROLOG CUT" )
+{
+ Descr  ="!";
+
+ Color  ="RED";
+ Bold   ="TRUE";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "COMMENT" )
+{
+ Descr="%[^\n]*\n";
+
+ Color="#00FF00";
+ Italic="TRUE";
+}
+
+#------------------------------------------------------------------------------
+# inside string the quotes must be doubled: 'a''a' is a'a 
+
+Element( "ATOM" )
+{
+ Descr="'((\'\')|[^'])*'";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+# inside string the quotes must be doubled: "a""a" is a"a
+
+Element( "STRING" )
+{
+ Descr="\"((\"\")|[^\"])*\"";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "SYMBOL" )
+{
+ Descr="#|@|\\|\.|;|,|:|-|=|^|&|\?|<|>|%|~|\+|/|\*|\{|\}|\(|\)";
+
+ RawBeg="<FONT COLOR=\"#FFFFFF\">";
+ RawEnd="</FONT>";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "LISTS" )
+{
+ Descr="\[|\]|\|";
+
+ Color="#00FFFF";
+}
+
+#------------------------------------------------------------------------------
+
+Element( "NUMBER" )
+{
+ Descr="[0-9]+";
+
+ Color="#00FFFF";
+}
+
+#- EOF ------------------------------------------------------------------------

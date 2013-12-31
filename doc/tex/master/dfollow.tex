@@ -1,0 +1,356 @@
+\section{Mno¾ina FOLLOW}\label{MnozinaFOLLOW}
+\index{DFOLLOW}\index{mno¾ina!FOLLOW}
+V~této èásti si vysvìtlíme význam mno¾iny FOLLOW pro deterministickou
+syntaktickou analýzu a~budeme se vìnovat zpùsobu jejího
+výpoètu. Mno¾ina FOLLOW nám
+umo¾ní provádìt deterministický rozklad jazykù, jejich¾ gramatiky
+obsahují $\varepsilon$-pøechody tj. mohou obsahovat i~prázdné øetìzce.
+
+\vskip 1mm
+\noindent
+Mno¾ina FOLLOW je formálnì definována takto:
+
+\begin{quote}
+{\bf Definice:}\\
+Pro neterminální symbol X~v~bezkontextové gramatice G=(N,T,P,S) platí:
+$$
+FOLLOW(X) = \{a| S~\Rightarrow^{*} \alpha X\beta, \beta \Rightarrow^{*} a\gamma,
+\gamma \in (N \cup T)^{*} \} \cup \{\varepsilon | S~\Rightarrow^{*} \alpha X\}
+$$ 
+Hodnotou funkce FOLLOW(X) je mno¾ina, která obsahuje v¹echny
+terminální symboly, které mohou následovat bezprostøednì za symbolem
+X. V~pøípadì, ¾e se neterminál X~vyskytne na konci nìkteré vìtné
+formy, pak mno¾ina FOLLOW(X) obsahuje rovnì¾ prázdný øetìzec.
+\end{quote}
+Pøi deterministické syntaktické analýze jazykù generovaných LL(1)
+gramatikami se vyu¾ívají informace o~nejbli¾¹ím symbolu v~dosud 
+nepøeètené èásti vstupního øetìzce. To znamená, ¾e podle tohoto
+výhledu se provádí výbìr pravidla gramatiky (tj. který parser 
+v~alternativní kompozici má být aplikován). Pøi nìm
+se obvykle pou¾ívá nìjaká forma rozkladové tabulky, ve které
+jsou uvedeny potøebné informace.
+
+\subsection*{Rozkladové tabulky}\label{RozkladoveTabulky}
+\index{rozkladové tabulky}
+Rozkladové tabulky hrají v~dal¹ím textu klíèovou roli, proto se
+jim budeme vìnovat podrobnìji. Princip sestrojení 
+rozkladové tabulky si uká¾eme na pøíkladu ní¾e uvedené bezkontextové
+LL(1) gramatiky:
+$$
+\begin{array}{l}
+G=(\{S,E,T\}, \{a,+,(,)\}, P, S)\\
+P=\{\\ 
+    \qquad\quad S~\rightarrow TE \\
+    \qquad\quad E~\rightarrow +TE\\
+    \qquad\quad E~\rightarrow \varepsilon\\
+    \qquad\quad T~\rightarrow a\\
+    \qquad\quad T~\rightarrow (S)\\ 
+    \qquad\}\\
+\end{array}
+$$
+Rozkladová tabulka pro tuto gramatiku má tvar:
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+R~& a~& + & ( & ) & $\varepsilon$\\
+\hline
+S~& TE & \quad & TE & \quad & \quad\\
+E~& \quad & +TE & \quad & $\varepsilon$ & $\varepsilon$\\
+T~& a~& \quad & (S) & \quad & \quad\\
+\hline
+\end{tabular}
+\end{center}
+V~prvním øádku tabulky jsou terminální symboly gramatiky,
+v~nejlevìj¹ím sloupci neterminální symboly a~uvnitø
+pravé strany pravidel. Tabulka se pou¾ívá pøi rozhodnutí,
+kterou z~pravých stran (jsou v~jednom øádku)
+nejlevìj¹ího neterminálu ve vìtné formì pou¾ít. Rozhoduje
+se dle terminálu ve výhledu --- vybere se sloupec tohoto
+terminálu a~tím i~pravá strana pravidla.
+
+\vskip 2mm\noindent
+Pro vytvoøení rozkladové tabulky gramatiky se pou¾ívá následujících
+algoritmus:
+
+\vskip 3mm
+\subsubsection*{Algoritmus \showPcAlgorithm:}\vskip -3mm
+Vytvoøení rozkladové tabulky pro LL(1) gramatiku.
+
+\begin{tabular}{ll}
+\emph{Vstup:}\quad & LL(1) gramatika G=(N,T,P,S).\\
+\emph{Výstup:}\quad & Rozkladová tabulka R pro gramatiku G.\\
+\emph{Metoda:}&
+\end{tabular}
+\begin{quote}
+Rozkladová tabulka R~je definována na kartézském souèinu
+$N \times (T \cup \{\varepsilon\})$.
+\begin{enumerate}
+\item  Je-li $A \rightarrow \alpha$ pravidlo v~$P$, pak $R(A,a)=\alpha$ 
+pro v¹echna\\ $a \in FIRST(\alpha)-\{\varepsilon\}$.
+\item Je-li $A \rightarrow \alpha$ pravidlo v~$P$ a~$\varepsilon~\in~FIRST(\alpha)$, pak
+$R(A,b)=\alpha$, pro v¹echna\\ $b~\in~FOLLOW(A)$.
+\item $R(A,a)=$ chyba ve v¹ech ostatních pøípadech.
+\end{enumerate}
+\end{quote}
+Z~algoritmu je zøejmé, ¾e mno¾iny FIRST pravých stran pravidel
+se stejným neterminálem na stranì levé musí být vzájemnì disjunktní.
+Navíc musí platit, ¾e pokud nìkterá z~pravých stran pøijímá
+prázdný øetìzec, musejí být vzájemnì disjunktní i~s~mno¾inou FOLLOW. 
+Formálnì vyjádøeno musí platit, ¾e pokud
+jsou $A \rightarrow \alpha$ a~$A \rightarrow \beta$ libovolná
+dvì rùzná pravidla v~P, pak:
+\begin{enumerate}
+\item $FIRST(\alpha) \cap FIRST(\beta) = \emptyset$\\
+To platí ov¹em i~pro $\varepsilon$.
+\item Pokud lze z~$\alpha$ derivovat prázdný øetìzec,
+pak musí navíc platit:\\
+$FOLLOW(A) \cap FIRST(\beta) = \emptyset$
+\end{enumerate}
+V~pøípadì, ¾e by nebyly mno¾iny disjunktní, bylo by pøípustné pou¾ití
+více ne¾ jednoho pravidla a~nemohlo by tedy být uèinìno jednoznaèné 
+rozhodnutí. Tím se vyjasòuje motivace pro zavedení módù \verb+empty/0+,
+\verb+first/0+ a~pou¾ití mno¾iny FOLLOW.
+
+Obra»me proto nyní svou pozornost ke konstruktorùm parserù a~rozeberme
+situaci zde. Pravidla obsahující $\varepsilon$-pøechod zde odpovídají
+alternativním kompozicím, v~nich¾ je nìkterá z~alternativ schopna pøijímat
+prázdný øetìzec.
+
+\vskip 2mm
+\noindent
+Zji¹»ujeme, ¾e v~kombinátorech parserù narazíme pøi vytváøení mno¾iny
+FOLLOW na \emph{zásadní problém}:
+\begin{quote}
+Na rozdíl od gramatik u~parserù \emph{nemáme} k~dispozici
+explicitní reprezentaci gramatiky, kterou parser realizuje. Nelze tedy
+urèit, kde v¹ude se neterminál, jen¾ je zde reprezentován alternativní
+kompozicí, nachází. 
+\end{quote}
+Situace je komplikována tím, ¾e se alternativní kompozice mù¾e predikátem
+navíc libovolnì prolínat. Bohu¾el nám nepomù¾e ani abstraktní 
+interpretace parseru, pøi které by se urèovalo, ze kterých míst
+je predikát volán. Pøi takové analýze parseru by toti¾ musela
+být ka¾dá alternativní kompozice nìjakým zpùsobem jednoznaènì
+identifikována. To by bylo mo¾né jedinì v~pøípadì, ¾e by ná¹ implementaèní 
+jazyk obsahoval speciální formu \emph{reflection}.\footnote{
+S~jistou formou \emph{reflection}, kterou zde máme na mysli,
+se mù¾eme setkat napøíklad v~jazyce Java}
+
+%\begin{center}
+%\begin{tabular}{lr}
+%$A \rightarrow X | Y | \varepsilon, AA \rightarrow P_1 A$ &
+%\qquad \verb|aa(M):- M:-> p1 <&> (X <:> Y <:> epsilon).|\\
+%$B \rightarrow X | Y | \varepsilon, BB \rightarrow B P_2$ & \qquad \verb|bb(M):- M:-> (X <:> Y <:> epsilon) <&> p2.|
+%\end{tabular}
+%\end{center}
+
+Dùvodem, proè bychom \emph{reflection} potøebovali je, ¾e se syntakticky
+stejné alternativní kompozice, které jsou v¹ak z~hlediska sémantického
+odli¹né, mohou nacházet nejen v~rùzných  èástech parseru, ale dokonce
+i~v~rámci jediné klauzule.
+
+V~pøípadì, ¾e bychom nebyli schopni od sebe rùzné alternativní kompozice
+odli¹it,  mohlo by dojít k~chybnému roz¹íøení mno¾iny FOLLOW o~symboly,
+které do ní nepatøí a~následnì buï k~detekci neexistujících kolizí 
+(konflikt  mno¾iny FIRST a~jedné z~alternativ nesprávnì pøidaného
+symbolu z~FOLLOW) nebo k~neoprávnìnému pou¾ití $\varepsilon$-pøechodu
+(konflikt s~ostatními alternativami nebyl pøi ovìøování vzájemné
+disjunktnosti mno¾in detekován, pou¾ije se tedy $\varepsilon$-pøechod
+pomocí nesprávnì pøidaného symbolu, co¾ následnì zpùsobí chybu,
+její¾ pøíèinu nelze jednoznaènì urèit).
+
+\vskip 2mm
+\noindent
+Situace v¹ak není tak beznadìjná, jak by se na první pohled mohlo zdát.
+Provedeme-li rozbor derivaèního stromu zjistíme, ¾e ve skuteènosti
+ke korektnímu rozkladu nepotøebujeme kompletní mno¾inu FOLLOW,
+ale bude nám staèit pouze její èást, je¾ je v~dané chvíli
+aktuální. Tuto mno¾inu budeme nazývat \emph{dynamická FOLLOW}~---
+DFOLLOW. \index{FOLLOW!dynamická}\index{DFOLLOW}
+
+Hlavní my¹lenka, která za jejím výpoètem stojí, je následující:
+v~dané chvíli postaèuje k~rozkladu jen urèitá èást mno¾iny 
+FOLLOW, je¾ obsahuje pouze ty symboly, které
+se mohou v~této èásti výpoètu skuteènì vyskytnout.
+Tato ponìkud vágní formulace bude upøesnìna v~èásti \ref{VypocetDFOLLOW}.
+Charakter mno¾iny DFOLLOW je tedy na rozdíl od FOLLOW \emph{lokální}.
+Její výpoèet tedy vzhledem k~její lokální povaze,
+nemù¾e být provádìn pomocí abstraktní interpretace parseru,
+ale a¾ v~prùbìhu samotného rozkladu pøímo v~módu provádìjícím
+deterministickou syntaktickou analýzu.
+
+
+
+\subsection{Výpoèet mno¾iny DFOLLOW}\label{VypocetDFOLLOW}
+Postup rozkladu s~výpoètem DFOLLOW popisuje následující algoritmus
+(viz také obrázek \ref{ImgFOLLOWAPravaAsociativita}):
+\begin{figure}
+\begin{center}
+ \includegraphics{images/rassocfollow.eps}
+\end{center}
+\caption{FOLLOW a~pravá asotiativita.}
+\label{ImgFOLLOWAPravaAsociativita}
+\end{figure}
+
+\vskip 3mm
+\subsubsection*{Algoritmus \showPcAlgorithm:}\vskip -3mm
+Výpoèet mno¾iny DFOLLOW pøi prùchodu kombinátorem sekvenèní kompozice.
+
+\begin{tabular}{ll}
+\emph{Metoda:}&
+\end{tabular}
+\begin{quote}
+\begin{enumerate}
+\item Mno¾ina $DFOLLOW$ je pøed zaèátkem výpoètu inicializována jako prázdná.
+\item Pøi prvním prùchodu výpoètu kombinátorem sekvenèní kompozice ovìø,
+zda parser $P_{right}$ stojící v~sekvenèní kompozici vpravo pøijímá
+prázdný øetìzec:
+\begin{itemize}
+\item pokud ne, aplikuj parser $P_{left}$ stojící v~sekvenèní kompozici
+vlevo s~mno¾inou:\\
+\qquad $DFOLLOW = FIRST(P_{right})$
+\item jestli¾e ano, pou¾ij $DFOLLOW_{parent}$ pøedka a~aplikuj parser 
+$P_{left}$ s~mno¾inou:\\
+\qquad $DFOLLOW = FIRST(P_{right}) \cup DFOLLOW_{parent}$
+\end{itemize}
+\item Pøi druhém prùchodu výpoètu kombinátorem sekvenèní kompozice, pøi nìm¾
+je aplikován parser $P_{right}$ pou¾ij mno¾inu:\\
+\qquad $DFOLLOW = DFOLLOW_{parent}$
+\end{enumerate}
+\end{quote}
+Jak lze snadno nahlédnout, pøi samotném rozkladu se vyjde od prázdné
+DFOLLOW, která se prùbì¾nì aktualizuje. Pokud za sebou 
+bezprostøednì následuje nìkolik parserù pøijímajících 
+prázdný øetìzec, prùbì¾nì se roz¹iøuje.
+Je zøejmé, ¾e nepotøebujeme znát kompletní mno¾inu FOLLOW 
+tak, jak je pou¾ívána v~teorii jazykù u~gramatik, 
+proto¾e zcela postaèující je DFOLLOW, kterou lze získat z~pravé èásti
+derivaèního stromu (obrázek \ref{ImgLeftVypoctovyStrom})
+abstraktní interpretací aktuální èásti parseru.
+
+\begin{figure}
+\begin{center}
+ \includegraphics{images/followtree.eps}
+\end{center}
+\caption{Strom výpoètu}
+\label{ImgLeftVypoctovyStrom}
+\end{figure}
+
+Pøí výpoètu mno¾iny DFOLLOW je také, vzhledem k~jejímu vztahu
+k~mno¾inám FIRST, dùle¾itá volba asociativity kombinátoru
+sekvenèní kompozice. V~knihovnì konstruktorù parserù
+je definován tento kombinátor jako operátor s~pravou 
+asociativitou (viz pøíloha \ref{PrehledOperatoru}).
+Tuto volbu jsme uèinili ze zøejmého dùvodu~--- 
+vìt¹ina rekurzivních datových struktur v~jazyce Prolog, 
+jako napøíklad pole, je definována s~pravou asociativitou, èeho¾
+nezøídka vyu¾ívají knihovní konstruktory.
+
+Nevýhodou zvolené pravé asociativity je, ¾e pokud nìkolik bezprostøednì
+po sobì následujících parserù v~pravém podstromu pøijímá prázdný 
+øetìzec, je nutné 
+podstatnì hlub¹í zanoøení do derivaèního stromu, aby bylo mo¾né
+potøebnou mno¾inu FIRST získat. V~pøípadì, ¾e tato situace nastává èasto,
+mù¾e docházet ke znatelné ztrátì efektivity.
+
+V~knihovnì jsou proto pøipraveny dva módy. V~prvním (\verb+eFirst/0+) se provádí
+výpoèet mno¾in FIRST opakovanì pro ka¾dou DFOLLOW. 
+Zde se naplno projevuje vliv struktury parseru na jeho
+abstraktní interpretaci. V~druhém módu (\verb+eFirst/1+) se jednou získané 
+výsledky
+ukládají, co¾ nám umo¾òuje globální charakter mno¾in FIRST. Vyhneme 
+se tak opakovanému prohledávání pravého podstromu 
+v~módu \verb|first/0|. Pøi prvním prùchodu se v¹e vypoète a~v
+následujích krocích jsou ji¾ získávány mno¾inu FIRST jednotlivých
+parserù z~ulo¾ených (parciálních) výsledkù. Výpoèet tak
+pro daný parser probìhne nejvý¹e jednou.
+
+
+\vskip 1mm
+\noindent
+Zmiòme je¹tì druhou mo¾nost --- situaci, kdy by byla zvolena 
+levá asociativita kombinátoru
+sekvenèní kompozice (viz také obrázek \ref{ImgLevaAPravaAsociatita}).
+
+\begin{figure}
+\begin{center}
+ \includegraphics{images/lrassoc.eps}
+\end{center}
+\caption{Levá a~pravá asociativita}
+\label{ImgLevaAPravaAsociatita}
+\end{figure}
+
+V~tomto pøípadì struktura parseru v~podstatì odpovídá struktuøe
+výpoèetního stromu, co¾ je výhodné pøedev¹ím pro abstraktní
+interpretaci parseru. 
+
+Pro výpoèet DFOLLOW se pou¾ívá identický algoritmus jako u~pravé 
+asociativity. Zde v¹ak nedochází v~pøípadì $\varepsilon$-pøechodu 
+v~parseru stojícím v~sekvenèní kompozici 
+vpravo pøi jeho abstraktní interpretaci k~tak zevrubné
+analýze a~u¾ vùbec ne k~opakovanému provádìní nìkterých 
+jejích èástí. Výsledek té její èásti, který se u~pravé
+asociativity opakuje je zde získáván v~prùbìhu rozkladu
+od \uv{pøedkù}~--- výpoèet mno¾iny DFOLLOW zde má
+\emph{inkrementální charakter}.
+
+Takto efektivního výpoètu lze dosáhnout s~levì asociativním
+kombinátorem sekvenèní kompozice pouze v~pøípadì módù
+ukládajících mezivýsledky pro pozdìj¹í pou¾ití.
+
+\vskip 3mm
+\noindent
+{\bf \uv{Early} výpoèet DFOLLOW}\\
+Mno¾iny DFOLLOW jsou, stejnì jako u~FIRST, z~dùvodu prostorové slo¾itosti 
+reprezentovány seznamem podmínek. Operace nad DFOLLOW jsou provádìny
+tak, jak bylo popsáno vý¹e.
+
+\vskip 3mm
+\noindent
+{\bf \uv{Lazy} výpoèet DFOLLOW}\\ 
+Rozklad vstupního textu s~pou¾itím mno¾iny DFOLLOW lze v~nìkterých 
+pøípadech zefektivnit tak, ¾e se proces jejího výpoètu 
+neprovádí prùbì¾nì, ale pouze se pøená¹ejí informace k~nìmu potøebné, 
+aby pak mohl být ve chvíli, kdy bude DFOLLOW potøeba,
+proveden.
+
+Pro pøenos potøebných dat se pou¾ívá zásobník parserù.
+Místo výpoètu mno¾iny FIRST parseru stojícího v~sekvenèní kompozici vpravo
+se tento ulo¾í na zásobník. Tak výpoèet pokraèuje a¾ do chvíle,
+kdy se má pou¾ít $\varepsilon$-pøechod.
+
+\vskip 1mm
+\noindent
+Potom se mno¾ina DFOLLOW získá dle následujícího algoritmu:
+\vskip 3mm
+\subsubsection*{Algoritmus \showPcAlgorithm:}\vskip -3mm
+\uv{Lazy} výpoèet mno¾iny DFOLLOW.
+
+\begin{tabular}{ll}
+\emph{Vstup:}\quad & Zásobník parserù.\\
+\emph{Výstup:}\quad & Mno¾ina DFOLLOW.\\
+\emph{Metoda:}&
+\end{tabular}
+\begin{quote}
+\begin{enumerate}
+\item Mno¾ina $DFOLLOW$ je inicializována jako prázdná.
+\item Odeber z~vrcholu zásobníku parser $P_{TOS}$
+a~vypoèti mno¾inu $FIRST(P_{TOS})$. 
+\item Uprav mno¾inu $DFOLLOW$ následujícím zpùsobem:\\
+\verb+   + $DFOLLOW \cup = FIRST(P_{TOS})$\\
+Pokud je zásobník prázdný pokraèuj krokem 5.
+\item Ovìø, zda parser $P_{TOS}$ pøijímá prázdný øetìzec:
+\begin{itemize}
+\item pokud ne, pokraèuj krokem 5.
+\item jestli¾e ano, pokraèuj krokem 2.
+\end{itemize}
+\item Konec výpoètu.
+\end{enumerate}
+\end{quote}
+O~tom zda je pou¾ití \uv{lazy} výpoètu výhodné rozhoduje, jak èasto je 
+v~prùbìhu rozkladu mno¾ina DFOLLOW pou¾ívána. 
+V~kombinaci s~ukládáním
+mno¾in FIRST lze zpravidla dosáhnout zvý¹ení rychlosti provádìné analýzy.
+
+\endinput
+-------------------------------------------------------------------------------

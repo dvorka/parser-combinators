@@ -1,0 +1,135 @@
+\chapter{Nástroje pro ladìní}
+Souèástí knihovny konstruktorù je podpora usnadòující efektivní 
+vyhledávání a~odstraòování chyb z~parserù. Její souèástí jsou jednak
+predikáty urèené pro ladìní a~dále speciální metaintrepret, který
+je souèástí knihovny a~konzultuje se spoleènì s~ní.
+
+\section{Predikáty jádra ladícího systému}
+Základní podporu  pøi vyhledávání chyb poskytuje následující
+sada predikátù:
+\begin{quote}
+\noindent
+\label{3}
+\verb|deBugName/1 |\hrulefill \verb| deBugName(+DebugFlag)|
+
+\vskip -2mm\noindent\begin{quote}Uspìje, pokud DebugFlag je aktivní ladící jméno tj. ladící akce
+ pod tímto jménem se mají provádìt. 
+\end{quote}\vskip -3mm\noindent\begin{description}
+
+\item {\it DebugFlag:}
+ Atom, který je ladícím jménem.
+
+\item {\it Pøíklad:}\vskip -3mm
+\vbox{\begin{verbatim}
+ ?- deBugName(profile).
+ Yes\end{verbatim}}
+\item \end{description}
+
+\noindent
+\label{4}
+\verb|deBug/2 |\hrulefill \verb| deBug(+DebugFlag,+Message)|
+
+\vskip -2mm\noindent\begin{quote}Pokud je DebugName aktivní ladící jméno, vypí¹e do proudu
+ definovanovaného ve struktuøe pcStdErr/1, který
+ je pova¾ován za standardní chybový výstup hlá¹ku Message.
+ Predikát v¾dy uspìje. Ladící jména jsou definována ve struktuøe
+ pcDeBugName/1.
+\end{quote}\vskip -3mm\noindent\begin{description}
+
+\item {\it DebugName:}
+ Atom, který je ladícím jménem.
+
+\item {\it Pøíklad:}\vskip -3mm
+\vbox{\begin{verbatim}
+ ?- deBug(showStatus,['Running...',nl]).
+ Running...
+
+Yes\end{verbatim}}
+\item \end{description}
+
+\noindent
+\label{5}
+\verb|deBugAssert/2 |\hrulefill \verb| deBugAssert(+Condition,+Message)|
+
+\vskip -2mm\noindent\begin{quote}Pokud není splnìna podmínka Condition, je pozastaveno vykonávání
+ programu, je vypsána hlá¹ka Message a~spu¹tìn interní debugger
+ interpretu.
+\end{quote}\vskip -3mm\noindent\begin{description}
+\item {\it Pøíklad:}\vskip -3mm
+\vbox{\begin{verbatim}
+ ?- deBugAssert(fail,[' some error.',nl]).
+ Assert:
+ some error.
+ ?_\end{verbatim}}
+\item \end{description}
+\end{quote}
+
+
+
+\section{Metainterpret pro ladìní}
+Aby bylo mo¾né vyhnout se procházení velkého mno¾ství kódu pøi 
+pou¾ívání interního debuggeru interpretu jazyka Prolog, byl vytvoøen
+metainterpret urèený speciálnì pro ladìní parserù, který ve své 
+implementaci vyu¾ívá architektury knihovny a~vlastností konstruktorù,
+které obsahuje.
+
+Metainterpret vyu¾ívá vlastní realizaci podpory programování vy¹¹ího
+øádu. Umo¾òuje krokování, prùbì¾né vypisování volaných parserù, sledování
+stopy výpoètu, nastavování ladících bodù, pøístup do struktur
+parserù za bìhu a~\emph{detekci jejich selhání}.
+
+Jak známo, parsery jsou predikáty, které nikdy neselhávají. Tuto jejich
+vlastnost  v¹ak nelze zpravidla v~interním debuggeru vyu¾ít. Pokud
+taková chyba nastane, výpoèet v~lep¹ím pøípadì konèí selháním a~v~hor¹ím
+vydáním nesprávného výsledku. Pomocí interního debuggeru je odstranìní
+takové chyby velmi zdlouhavé.
+
+Knihovní metainterpret je schopen selhání libovolného parseru 
+detekovat (detekce se provádí v~prùbìhu ka¾dého jeho spu¹tìní).
+V~pøípadì výskytu takové chyby pozastaví výpoèet a~zobrazí prompt
+ladícího bodu.
+
+\subsubsection*{Predikát}\vskip -2mm
+Bìhovou nápovìdu poskytuje predikát \verb+deBugger/0+. Vstupním
+bodem metaintretu je predikát \verb+deBugger/3+:
+\begin{quote}
+deBugger(+Goal, +Options, +BreakPoints)
+\end{quote}
+$Goal$ je ladìný cíl. Parametr $Options$ je 
+Prologovský seznam voleb, který mù¾e obsahovat atomy
+\verb+verbose+, \verb+stack+, \verb+break+, \verb+trace+ a~\verb+display+.
+Atom \verb+verbose+ urèuje, zda se má vypisovat ka¾dý volaný cíl,
+\verb+stack+ vypisování zásobníku volání parserù,  \verb+trace+ 
+krokování, \verb+display+ zpùsob výpisu operátorù
+a~pokud je uveden atom \verb+break+, dojde k~zastavení 
+pøi volání parseru, který je uveden v~seznamu $BreakPoints$.
+Parametr $BreakPoints$ je prologovský seznam funktorù \emph{parserù} 
+a~\emph{konstruktorù}, které jsou ladícími body.
+\begin{quote}\begin{verbatim}
+?- deBugger( (s("72381e-12")+L :-> double <@ show),
+|            [break],
+|            [<@,symbol,<<?@>>] ).
+?- deBugger( invokeFile(lexStrip,'input.src',_)),
+|            [verbose,display]).
+\end{verbatim}\end{quote}
+
+
+\subsubsection*{Prompt ladícího bodu}\vskip -2mm
+Ladící bod lze nastavit zpùsobem uvedeným v~pøedcházející èásti.
+Pokud metainterpret vstoupí do procedury parseru, který je 
+ladícím bodem, pozastaví bìh a~vypí¹e prompt.
+Na nìm lze provádìt následující operace:
+\begin{itemize}
+\item Pøidání a~odebrání ladícího bodu.
+\item Pøechod do krokovacího re¾imu.
+\item Nastavení a~zru¹ení ladících bodù interního debuggeru.
+\item Pøechod do interního debuggeru.
+\item Zobrazení zdrojového kódu libovolného parseru.
+\item Zobrazení seznamu úspì¹ných rozkladù a~aktuálního selektoru.
+\item Zobrazení stopy výpoètu.
+\item Pokraèování v~ladìní.
+\item Ukonèení výpoètu.
+\end{itemize}
+
+\endinput
+-------------------------------------------------------------------------------

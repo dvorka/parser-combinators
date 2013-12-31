@@ -1,0 +1,18 @@
+
+ Pouziti interpretu BinProlog
+ ============================
+
+ Prace byla vytvarena v interpretu SWI Prolog, nicmene snahou bylo, aby
+ jadro knihovny pokud mozno nebylo zavisle na konkretni implementaci,
+ pres vsechny rozdily, ktere mezi jednotlivymi Prology existuji.  
+ Muzete tedy zkusit BinProlog (verze 5.75 a novejsi), ktery by mel byt 
+ spousten s temito parametry:
+ 
+ 	bp -l5 -h60000 -s35000 -t7024 -b7024 
+        
+ dulezity je zejmena zpusob zavadeni zdrojovych souboru (rovnez z hlediska
+ knihovniho debuggeru). 
+ 	Vzhledem k tomu, ze knihovna byla vytvarena primarne pro SWI Prolog
+ vsak bohuzel nelze vyloucit, ze se vyskytnou problemy.       
+
+- EOF -

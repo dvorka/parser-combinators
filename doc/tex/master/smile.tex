@@ -1,0 +1,82 @@
+\subsubsection{Operátorová notace a~predikát :$-$$>$}\vskip -3mm
+\label{OperatorovaNotace}\index{\verb+:->+}
+
+Nyní udìláme dùle¾itou odboèku a~budeme se vìnovat operátorovému
+zápisu a~zavedení predikátu \verb|:->|.
+
+Jazyk Prolog poskytuje prostøedky, pomocí nich¾ mù¾e programátor
+zavést vlastní operátory a~pou¾ívat je pøi zápisu struktur. Výhody
+operátorové notace jsou nesporné. Toto \uv{syntaktické pozlátko}
+umo¾òuje pou¾ití pro èlovìka výraznì èitelnìj¹ího zápisu. My tuto
+pøíjemnou vlastnost jazyka Prolog samozøejmì vyu¾ijeme a~nejdùle¾itìj¹í kombinátory a~mutátory definujeme rovnì¾ jako
+operátory. Tím se otevøe cesta ke zpùsobu zápisu parserù, který bude
+velmi podobný deklarativní notaci gramatik. Navíc nám pou¾ití
+operátorù umo¾ní vytváøet efektivnìji pracující parsery a~jejich
+konstruktory, jak se pøesvìdèíte v~kapitole 
+\ref{VlastnostiOperatoroveNotace}.
+
+Prvním z~predikátù definovaných jako operátor je právì kombinátor pro
+sekvenèní kompozici. 
+
+Pøehled v¹ech zavedených operátorù je obsa¾en v~pøíloze
+\ref{PrehledOperatoru}. Pøíloha poskytuje pøehledné informace o~precedenci,
+asociativitì a~notaci jednotlivých operátorù a~usnadòuje jak orientaci
+mezi operátory, tak vytváøení nových parserù.
+
+Jako pøíklad pou¾ití kombinátoru sekvenèní kompozice si uka¾me
+aplikaci parseru pro rozpoznání prologovského operátoru aritmetické
+ekvivalence \verb|=:=/2|\/:
+\begin{quote}\begin{verbatim}
+?- <&>>(symbol("="),symbol(":") <&>> symbol("="),s("=:=")+L).
+L = [s([])> (O'=> (O':>O'=))]
+Yes
+\end{verbatim}\end{quote}
+Úkolem vý¹e uvedeného \uv{umìlého} pøíkladu je poukázat na fakt, ¾e
+nevystaèíme pouze s~definicí kombinátorù jako operátorù. Zatímco v~druhém zøetìzení parseru dvojteèky a~symbolu rovnosti ¹lo pou¾ít
+\verb|<&>>| v~infixní notaci a~zachytit tím pøehlednì fakt, ¾e
+aplikací kombinátoru na parsery vzniká parser nový, v~prvním pøípadì
+to mo¾né nebylo. Pøíèinou vynuceného pou¾ití standardního zápisu je
+to, ¾e v~dané situaci kombinátor provádí volání jím vytvoøeného parseru,
+a~proto mu pøibyl argument obsahující vstupnì/\-výstupní term. 
+Na¹ím cílem nyní je odstranit tuto nepravidelnost a~umo¾nit
+tak elegantnìj¹í a~èitelnìj¹í zápis v~operátorové notaci ve v¹ech pøípadech.
+
+Pro øe¹ení tohoto problému bychom mohli pou¾ít predikát \verb|:-@/1|,
+pomocí nìho¾ bychom parser aplikovali. My v¹ak radìji zavedeme pro
+aplikaci parserù speciální predikát \verb|:->/2|, který 
+navíc definujeme jako operátor, abychom tím zápis parserù udìlali je¹tì
+pøirozenìj¹í. Jeho prvním argumentem je vstupnì/\-výstupní term a~druhým
+parser: 
+\begin{quote}
+$:$$-$$>$$(Input+LOS,Parser)$
+\end{quote}
+Tento predikát se postará o~pøipojení vstupnì/\-výstupního termu a~provede aplikaci
+parseru. Vyjádøeno schematicky, místo zápisu:
+\begin{quote}
+$?- parser(Arg_{1}, \dots, Arg_{n}, Input+LOS).$
+\end{quote}
+budeme pou¾ívat ekvivalentní:
+\begin{quote}
+$?-$ $Input+LOS$ $:$$-$$>$ $parser(Arg_{1}, \dots, Arg_{n}).$
+\end{quote}
+Tím se také vyjasòuje motivace spojení vstupního parametru
+a~seznamu úspì¹ných rozkladù do jednoho termu v~návrhu
+rozhraní parserù.
+
+Vra»me se je¹tì zpìt k~pøíkladu, který stál na poèátku a~uka¾me si
+konkrétní pou¾ití nového predikátu:
+\begin{quote}\begin{verbatim}
+?- s("=:=")+L :-> 
+        (symbol("=") <&>> symbol(":") <&>> symbol("=")).
+L= [s([])> (O'=> (O':>O'=))]
+Yes
+\end{verbatim}\end{quote}
+Pou¾ití predikátu \verb|:->/2| bude výhodné pøedev¹ím v~pøípadech slo¾itìj¹ích
+parserù, ve kterých pou¾ijeme operátory rùzných priorit. Bez nìj bychom
+byli nuceni vyhledávat konstruktor, který má peèovat o~vstupnì/\-výstupní
+term, a~jeho standardním zápisem bychom naru¹ovali jinak pøehlednou
+notaci.
+
+\endinput
+-------------------------------------------------------------------------------
+\catcode`> = 13\relax

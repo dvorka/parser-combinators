@@ -1,0 +1,24 @@
+./
+	Podpora programovani vyssiho radu.
+
+standard.pl
+	Podpora nezavisla na konkretni implementaci Prologu.
+swi.pl
+	Optimalizovana pro SWI Prolog.
+bp.pl
+	Optimalizovana pro BinProlog.
+
+
+
+Poznamka:
+	V tomto adresari je v souborech *.pl zakladni verze podpory HOP.
+	Alternativne jsou rozdeleny do dvou adresaru, aby mohly byt 
+	predikaty:
+        	:->/2 	... 	adresar /binder
+        	:-@/1 	... 	adresar /calln
+        nahrazeny jednotlive "specializatorem" a nasledne jim vygenerovanym
+        kodem.
+        	Muze tak byt specializovan bud *pouze* :->/2 nebo
+	*pouze* :-@/1.                
+
+- EOF -

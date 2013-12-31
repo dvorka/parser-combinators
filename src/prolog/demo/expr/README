@@ -1,0 +1,23 @@
+./
+	Parsery (aritmetickych) vyrazu.
+
+geneze/
+	Postup vytvoreni parseru v jednotlivych krocich.
+
+expr.pl
+	Parser vyrazu obsahujicich unarni i binarni operatory s libovolnym
+        poctem priorit. Z uzivatelskeho zapisu je vygenerovan parser,
+        ktery je nasledne pouzit pro rozklad. Dale je specifikovan
+        vyhodnocovac.
+
+exprAssert.pl
+	Varianta exprTrim.pl, ktera prida parser do databaze a tim
+        vyrazne snizuje prostorovou i casovou slozitost.
+
+exprTrim.pl
+	Varianta expr.pl provadejici orezavani v prubehu rozkladu.
+        
+op2env.pl
+	Generuje z uzivatelske specifikace operatoru parser.
+        
+-EOF-

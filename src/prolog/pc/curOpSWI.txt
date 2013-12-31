@@ -1,0 +1,60 @@
+
+Machine generated file of current_op/3:
+
+1   fx   $
+200   xfx   **
+200   xfy   ^
+400   yfx   xor
+400   yfx   /
+400   yfx   mod
+400   yfx   *
+400   yfx   <<
+400   yfx   rem
+400   yfx   >>
+400   yfx   //
+500   yfx   /\
+500   fx   \
+500   fx   ?
+500   yfx   -
+500   fx   -
+500   yfx   +
+500   fx   +
+500   yfx   \/
+600   xfy   :
+700   xfx   >
+700   xfx   is
+700   xfx   <
+700   xfx   =<
+700   xfx   \==
+700   xfx   =\=
+700   xfx   ==
+700   xfx   =:=
+700   xfx   =
+700   xfx   @>=
+700   xfx   \=
+700   xfx   @>
+700   xfx   =@=
+700   xfx   >=
+700   xfx   @=<
+700   xfx   @<
+700   xfx   \=@=
+700   xfx   =..
+900   fy   \+
+900   fy   not
+1000   xfy   ,
+1050   xfy   *->
+1050   xfy   ->
+1100   xfy   |
+1100   xfy   ;
+1150   fx   multifile
+1150   fx   module_transparent
+1150   fx   dynamic
+1150   fx   volatile
+1150   fx   discontiguous
+1150   fx   initialization
+1200   xfx   :-
+1200   fx   :-
+1200   fx   ?-
+1200   xfx   -->
+
+(by /pc/src/prolog/tools/curop.pl)

@@ -1,0 +1,118 @@
+# FTE Colorizer, Martin Dvorak, 1998
+colorize Prolog {
+    SyntaxParser        = 'SIMPLE';
+
+    color {
+        { 'Normal',      'Lang_Default' },
+        { 'Number',      'Lang_DecimalNumber' },
+        { 'Punctuation', 'Lang_Punctuation' },
+        { 'String',      'Lang_String' },
+        { 'Comment',     'Lang_Comment' },      # comment %
+        { 'Function',    'Lang_Preprocessor' }, # comment /* */ (fake name: Function)
+        { 'Label',       'Lang_Label' },        # list []
+        { 'Tag',         'Lang_Preprocessor' }, # special 1
+        { 'Special',     'Lang_Label' },        # special 2
+    };
+
+    keyword 'Editor_Keywords' {
+        'abort','append','ancestor','arg',
+        'atom','atomic','bagof','break','call','clause',
+        'display','fail','false','functor','get','get0','halt','integer','is',
+        'length','listing','name','nl','nonvar','nodebug','nospy','not',
+        'notrace','op','print','put','read','repeat',
+        'setof','skip','spy','tab',
+        'trace','true','var','write',
+    };
+
+    keyword 'Lang_Regexp' {
+        'abolish','asserta','assert','assertz','retract','retractall',
+    };
+
+    keyword 'Lang_Command' {
+        'consult',
+        'see','seeing','seen',
+        'tell','telling','told',
+    };
+
+    h_state 0 { 'Normal' }
+    h_trans { 4, '-s', 'a-zA-Z_', 'Normal' }
+    h_trans { 1, '', '%', 'Comment' }
+    h_trans { 2, '', '"', 'String' }
+    h_trans { 3, '', '\'', 'String' }
+    h_trans { 5, 's', '0-9', 'Number' }
+    h_trans { 6, '', '/*', 'Function' }
+    h_trans { 7, '<', '[', 'Label' }
+    h_trans { 0,'qQ', ';', 'Tag' }
+    h_trans { 0,'qQ', '!', 'Special' }
+    h_trans { 0, 'S', '_a-zA-Z0-9', 'Punctuation' }
+
+    h_state 1 { 'Comment' }
+    h_trans { 0, '$', '', 'Normal' }
+
+    h_state 2 { 'String' }
+    h_trans { 0, '', '"', 'String' }
+    h_trans { 0, '$', '', 'String' }
+
+    h_state 3 { 'String' }
+    h_trans { 0, '', '\'', 'String' }
+    h_trans { 0, '$', '', 'String' }
+
+    h_state 4 { 'Normal' }
+    h_trans { 0, '$', '', 'Normal' }
+    h_wtype { 0, 0, 0, '', 'a-zA-Z0-9_' }
+
+    h_state 5 { 'Number' }
+    h_trans { 0, '-S', '0-9', 'Normal' }
+    h_trans { 0, '$', '', 'Normal' }
+
+    h_state 6 { 'Function' }
+    h_trans { 0, '', '*/', 'Function' }
+
+    # nested list are supported up to depth 5: [[[[[ ]]]]]
+    h_state 7 { 'Label' }
+    h_trans { 0, '>', ']', 'Label' } # close (level 0)
+    h_trans { 8, '<', '[', 'Label' } # if list is nested -> dive deeper
+    h_trans { 0, '$', '', 'Label' } # if new line       -> stop highlighting
+    h_state 8 { 'Label' }
+    h_trans { 7, '>', ']', 'Label' } # return one level up (nested level1)
+    h_trans { 9, '<', '[', 'Label' } # if list is nested -> dive deeper
+    h_trans { 0, '$', '', 'Label' } # if new line       -> stop highlighting
+    h_state 9 { 'Label' }
+    h_trans { 8, '>', ']', 'Label' } # return one level up (nested level2)
+    h_trans { 10, '<', '[', 'Label' } # if list is nested -> dive deeper
+    h_trans { 0, '$', '', 'Label' } # if new line       -> stop highlighting
+    h_state 10 { 'Label' }
+    h_trans { 9, '>', ']', 'Label' } # return one level up (nested level3)
+    h_trans { 11, '<', '[', 'Label' } # if list is nested -> dive deeper
+    h_trans { 0, '$', '', 'Label' } # if new line       -> stop highlighting
+    h_state 11 { 'Label' } # bottom
+    h_trans { 10, '>', ']', 'Label' } # return one level up 
+    h_trans { 0, '$', '', 'Label' } # if new line       -> stop highlighting
+    
+} # colorize
+
+mode Prolog: PLAIN {
+    # ! WARNING !
+    #  Prolog source files usually have the same extension as Perl (*.pl) 
+    # ! WARNING !
+    FileNameRx          = /\.\c{pl}|{PL}|{HL}$/;
+    HilitOn             = 1;
+    Colorizer           = 'Prolog';
+    AutoIndent          = 1;
+    IndentMode          = 'PLAIN';
+    TabSize             = 8;
+    SpaceTabs           = 1;
+    MatchCase           = 1;
+    Trim                = 1;
+    MultiLineHilit      = 1;
+    AutoHilitParen      = 1;
+    ShowMarkers         = 0;      # visible eol/eof markers
+
+    SaveFolds           = 2;      # 2 ... save fold info at end of line
+    CommentStart        = ' %';   # to be able later encapsulate block into /* */
+    CommentEnd          = '';
+
+    # ToDo:
+    #RoutineRegexp       = /^[a-z][a-zA-Z_0-9]*\([^:]*:-/;
+} # mode
+

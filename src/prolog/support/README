@@ -1,0 +1,10 @@
+file.pl
+	Zakladni operace se soubory.
+
+setlist.pl
+	Seznamy a mnoziny.
+
+stream.pl
+	Prehled predikatu pro praci s vstupnimi a vystupnimi proudy.	
+
+-EOF-

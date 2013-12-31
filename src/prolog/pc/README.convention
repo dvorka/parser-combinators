@@ -1,0 +1,32 @@
+
+			Konvence ve zdrojovych souborech
+
+ Predikaty
+  p_  ... pomocny predikat se standardnim jmenem '_'
+  <>^ ... pomocny predikat se jmenem vytvorenym ze specialnich znaku '^'
+  pDL ... verze predikatu pracujici s rozdilovymi seznamy
+
+ Argumenty
+  I  ... vstup (Input)
+  L  ... seznam uspesnych rozkladu (List Of Successes)
+  W  ... vstupne vystupni term I+L (Wrapper)
+  N  ... zbytek vstupu (NotParsed)
+  R  ... vysledek rozkladu (Result)
+  P  ... parser
+  D  ... promenna rozdiloveho seznamu(DL-D)
+  Sh ... stream handle
+
+ Predikat parser
+               		parser(+Arg1,...,+ArgN, +I + -L).
+
+  Arg ... argumenty parseru
+  I   ... vstup
+  L   ... List Of Successes - LOS: [ "Not parsed input">Result1, N2>R2 ]
+   
+ +--------------------------------------------------------------------------+
+ | 		      Parser *nikdy* neselhava jako predikat!               |
+ |            Selhani je vyjadreno prazdnym seznamem uspesnych rozkladu:    |
+ |				LOS==[]                                     |
+ +--------------------------------------------------------------------------+
+
+- EOF -

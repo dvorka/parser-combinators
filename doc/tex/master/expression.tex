@@ -1,0 +1,277 @@
+\chapter{Analýza výrazù}\label{AnalyzaVyrazu}\index{výrazy!analýza}
+Motivací pro zavedení operátorové notace je usnadnit zapisování
+a~ètení výrazù èlovìku. Pou¾ívání této reprezentace, která má
+výhradnì syntaktický charakter, se neomezuje pouze na rozpoznávání
+aritmetických výrazù v~matematice, ale kupøíkladu v~programovacích
+jazycích se s~ní mù¾eme setkat pøi zápisu nejrùznìj¹ích konstrukcí
+na ka¾dém kroku. S~operátorovou notací
+se musí vyrovnat programové vybavení a~nìjakým zpùsobem ji 
+analyzovat~--- získat z~ní relevantní informace tj. urèit argumenty 
+a~operace,
+které s~argumenty pracují. Dobøe navr¾ená operátorová notace 
+je nejen snadno èitelná a~pochopitelná pro èlovìka,
+ale zároveò také musí být mo¾né její zpracování pomocí parserù.
+
+V~této kapitole si uká¾eme základní konstruktory urèené pro vytváøení 
+parserù rùzných operátorových zápisù. Zaèneme nejjednodu¹¹ím
+pøípadem parseru binárních operátorù jedné precedence zalo¾eném
+na iterátoru z~èásti \ref{JednoduchaIterace}. Ve druhé èásti
+vytvoøíme parser analyzující výrazy s~libovolným poètem precedenèních
+tøíd.
+
+\section{Iterace se sémanticky relevantními separátory}\label{IteraceSeSemantickyRelevantnimiSeparatory}
+Konstruktory se kterými jsme se seznámili v~kapitole
+\ref{Iterace} nám umo¾nily parsovat posloupnosti polo¾ek
+oddìlené textem, který nemìl z~hlediska dal¹í analýzy ¾ádný význam
+a~tak mohl být v~jejím prùbìhu ignorován. 
+
+V~této èásti se budeme vìnovat ponìkud slo¾itìj¹ímu pøípadu, kdy 
+budou separátory nositeli sémantické informace.
+
+Asi nejtypiètìj¹ím pøípadem takového vstupního textu jsou
+aritmetické výrazy. Pou¾ijeme je tedy i~v~motivaèním pøíkladu,
+kde budou vytvoøeny z~celých èísel pomocí 
+operací násobení a~podílu, které budou mít levou asociativitu.
+V~zápisu výrazù bude také mo¾né pou¾ívat
+závorky. Gramatiku vý¹e popsaných aritmetických výrazù lze 
+vyjádøit v~Backus-Naurovì formì takto:
+\begin{quote}
+\begin{tabular}{lll}
+$<expr>$ & $::=$ & $<term>$\\
+$<term>$ & $::=$ & $<expr> * <fact> |$\\
+         &       & $<expr> / <fact>$\\
+$<fact>$ & $::=$ & $<int> |$\\
+         &       & $<fun> |$\\
+         &       & $( <expr> )$\\
+\end{tabular}
+\end{quote}
+S~pomocí konstruktorù, které máme ji¾ k~dispozici, mù¾eme takovou 
+gramatiku snadno pøevést do jazyka Prolog pøímým pøepisem
+do notace pou¾ívané v~knihovnì:
+\begin{quote}\begin{verbatim}
+expr(W):-
+        term(W).
+term(W):-
+ W :->  (expr <&>> symbolA("*") <&>> fact)
+          <:
+        (expr <&>> symbolA("/") <&>> fact).
+fact(W):-
+  W :->  int
+          <:
+         poorIdf <&> parentheses(commaListOf expr)<?>
+          <:
+         parentheses(expr).
+\end{verbatim}\end{quote}
+Tento parser by nám mìl pomoci analyzovat strukturu výrazu a~vydat
+ji ve formì nìjakého syntaktického stromu. Vzhledem k~tomu, ¾e
+jde o~aritmetické výrazy, bylo by pøínosnìj¹í, kdyby syntaktický
+strom nìjakým zpùsobem zpracovával. My si v~tomto pøípadì uká¾eme vyhodnocení
+výrazu, ale zpùsob zpracování mù¾e být mnohem obecnìj¹í~---
+lze si napøíklad pøedstavit, ¾e bude generován strojový kód
+nebo provádìn \uv{pøeklad} do jiné notace.
+
+Mnohem záva¾nìj¹í závadou je, ¾e tento parser není vùbec pou¾itelný.
+Problém je v~parseru \verb+term+, který, vzhledem k~asociativitì operátorù
+a~z~toho plynoucího zpùsobu jejich vyhodnocování, obsahuje levou
+rekurzi a~výpoèet by proto nikdy neskonèil. Nejdøíve odstraníme 
+tento nedostatek. \index{tranformace!levá rekurze}
+
+
+Øe¹ením problému s~levou rekurzí je samozøejmì její nahrazení 
+\emph{iterací}. Podíváme-li
+se na gramatiku, tak vidíme, ¾e aritmetický výraz je posloupností
+faktorù, které jsou oddìleny operátory \verb+'*'+ a~\verb+'/'+, 
+jen¾ mají stejnou precedenci. Prvním krokem tedy mù¾e být vyjádøení pomocí 
+ji¾ døíve definovaného iterátoru:
+\begin{quote}\begin{verbatim}
+term(W):-
+ W :->    
+        (expr <&>> 
+         ((symbolA("*")<:symbolA("/")) <&>> expr)<**>) 
+           <@ shownl.
+\end{verbatim}\end{quote}
+Iterátor
+\verb+<**>+ se postará o~to, aby výpoèet skonèil. Zbývá definovat
+predikát provádìjící vyhodnocení v~mutátoru aplikace sémantické
+operace, který zde byl nahrazen \verb+shownl+, aby jsme si mohli ukázat,
+jaké operace bude nutné zpracovávat:
+\begin{quote}\begin{verbatim}
+?- term(s("1/2/3")+L).
+1>[/ >2, / >3]
+1>[/ >2]
+1>[]
+L= [s([])> (1>[/ >2, / >3]), _] 
+Yes
+\end{verbatim}\end{quote}
+Kromì iniciální hodnoty za argumentem v¾dy následuje seznam, v~nìm¾
+je operátor spoleènì s~pravým operandem ve dvojici. Snadno lze nahlédnout,
+¾e je to varianta predikátu \verb+foldL/4+. Buï mù¾eme pou¾ít 
+pøímo \verb+foldL/4+ a~na získání argumentu a~operace \emph{volat}
+v~ka¾dém kroku predikát nebo definovat jeho jednoúèelovou variantu:
+\index{chainFoldl@\verb+chainFoldl+}
+\begin{quote}\begin{verbatim}
+chainFoldl(InVal>[Op>I|IT],Out):-
+        :-@ [Op,InVal,I,OutVal],
+        chainFoldl(OutVal>IT,Out).
+chainFoldl(Out>[],Out).
+\end{verbatim}\end{quote}
+pomocí které ji¾ dosáhneme vyhodnocení:
+\begin{quote}\begin{verbatim}
+?- term(s("1/2/3")+L).
+L = [s([])>0.166667, s("/3")>0.5, _]
+Yes                     
+\end{verbatim}\end{quote}
+Jako obvykle tuto konstrukci zobecníme a~vytvoøíme knihovní
+kombinátor, který obsahuje levou faktorizaci ji¾ uvnitø své definice:
+\index{lchainedBy@\verb+lchainedBy+}
+\begin{quote}\begin{verbatim}
+lchainedBy(P,S,W):-
+ W :->
+        ( P <&>> (S <&>> P)<*> ) <@ chainFoldl.
+\end{verbatim}\end{quote}
+Variantu pro operátory s~pravou asociativitou lze zkonstruovat
+analogicky. 
+S~pomocí \verb+lchainedBy+ ji¾ mù¾eme pøeformulovat parser z~úvodu této 
+kapitoly tak, aby fungoval korektnì:
+\begin{quote}\begin{verbatim}
+expr(W):-
+ W :->  fact
+         lchainedBy 
+          (symbolA("*")<:symbolA("/"))
+\end{verbatim}\end{quote}
+Ji¾ se nezacyklí:
+\begin{quote}\begin{verbatim}
+?- s("1*prumer(12,6,3)*(8/10)")+L :-> expr.
+L= [s([])>5.6]
+Yes
+\end{verbatim}\end{quote}
+Vytvoøený predikát by v¹ak mohl pracovat efektivnìji. Kombinátor
+\verb+lchainedBy+ získává výsledek a¾ po rozkladu celého vstupu 
+ze seznamu voláním varianty \verb+foldL/4+.
+Výhodnìj¹í by bylo provádìt výpoèet ji¾ v~prùbìhu rozkladu.
+Vytvoøíme tedy kombinátor, který sémantické
+akce odpovídající jednotlivým separátorùm aplikuje
+v~prùbìhu analýzy vstupu. Pro vyhodnocení navíc pou¾ívá predikát
+pøedaný v~parametru $E$:
+\index{chainL@\verb+chainL+}
+\begin{quote}\begin{verbatim}
+chainL(E,P,S,W):-
+ W :->
+        (P<&>>S)<*@*>P-eChainL(E).
+\end{verbatim}\end{quote}
+kde \verb+eChainL+ je analogie \verb+chainFoldl+, která 
+po ka¾dé iteraci provádí výpoèet voláním vyhodnocovaèe $E$.
+Je¹tì si pov¹imnìte malého triku, jen¾ byl pou¾it v~mutátoru \verb+<*@*>+.
+Zpùsobem pou¾itým pøi implementaci \verb+lchainedBy+ by vyhodnocení 
+nebylo mo¾né, proto¾e iniciální hodnota pøichází a¾ po vynoøení
+z~rekurze. Proto nahradíme terminátor (pùvodnì pøijímající 
+\uv{prázdný vstup}) parserem iniciální hodnoty. Parser se tím 
+také zjednodu¹í.
+
+Zkonstruování varianty \verb+chainR+ pro operátory s~pravou asociativitou 
+ji¾ není problematické.
+
+
+\vskip 3mm
+\noindent
+Na motivaèním pøíkladu bylo opìt vidìt, ¾e zápis parserù mù¾e plnohodnotnì 
+nahradit gramatiky v~jejich roli pøi specifikaci analyzovaných jazykù.
+Kombinátory pøedstavené v~této èásti zjednodu¹ují vytváøení
+parserù podle gramatik, které popisují výrazy. Díky nim
+se vyhýbáme nutnosti transformací gramatik za úèelem
+odstranìní \emph{levé rekurze}, která by jinak vedla k~zacyklení.
+Rovnì¾ se nemusíme zabývat \emph{levou faktorizací} pro
+zefektivnìní rozkladu, nebo» ta je ji¾ souèástí definic kombinátorù.
+
+                                       
+\section{Více úrovní precedence}\label{ViceUrovniPrecedence}
+Jednou z~cest, jak analyzovat výrazy v~nich¾ se vyskytují operátory s~více 
+úrovnìmi precedence, je pro ka¾dou dal¹í precedenci zavést nový predikát.
+Uká¾eme si to na roz¹íøení pøíkladu z~pøedchozí èásti:
+\begin{quote}\begin{verbatim}
+expr(W):-
+ W :->
+        level1 lchainedBy (symbolA("+") <: symbolA("-")).
+level1(W):-
+ W :->
+        level0 lchainedBy (symbolA("*") <: symbolA("/")).
+level0(W):-
+ W :->  
+        fact   lchainedBy (symbolA("mod") <: symbolA("//")).
+\end{verbatim}\end{quote}
+Pøedstavme si v¹ak situaci, kdy máme mnohem více úrovní priority
+nebo mù¾eme operátory pøidávat jako v~Prologu.
+V~takovém pøípadì jsme nuceni vytváøet stejnì velké mno¾ství 
+témìø identického kódu~---
+tomu se v¹ak lze velice snadno vyhnout pomocí generátoru,
+který z~daného seznamu operátorù stejné precedence vygeneruje
+parser a~ten aplikuje na vstup:
+\index{exprGen@\verb+exprGen+}
+\begin{quote}\begin{verbatim}
+exprGen(Operators,P,W):-
+    mapList(sfx(tokenA),Operators,OpList),
+    selection(OpList,SepParser),
+    W :->
+        P lchainedBy SepParser.
+\end{verbatim}\end{quote}
+Vytvoøení parseru pro libovolný poèet úrovní precedence
+je pak opravdu jednoduché:
+\begin{quote}\begin{verbatim}
+expr(W):-
+    foldR(sfx2(exprGen),fact(expr),
+          [["+","-"],["*","/"],["//","mod"]], ExprParser),
+    W :->
+        ExprParser.
+\end{verbatim}\end{quote}
+Nejdøíve se zkonstruuje pomocí \verb+foldR/4+ parser, který bude
+na jednotlivých úrovních precedence volat generátor.
+Druhý parametr obsahuje parser entity s~nejvy¹¹í precedencí a~tøetí seznam, v~jeho¾ polo¾kách jsou v¾dy operátory stejné precedence. 
+Tyto podseznamy jsou seøazeny s~klesající precedencí. Na ka¾dé úrovni 
+se pak v~prùbìhu rozkladu volá generátor:
+\begin{quote}\begin{verbatim}
+?- expr(s("1+10mod3//2*100+2*5//2")+L)
+L= [[]> 5]
+Yes
+\end{verbatim}\end{quote}
+Roz¹íøení o~dal¹í úroveò priority nyní spoèívá v~pouhém pøidání
+podseznamu do tøetího parametru predikátu \verb+foldR/4+ .
+
+\vskip 3mm
+\noindent
+Obdobným zpùsobem, jakým jsme v~této kapitole vytváøely nové konstruktory,
+by bylo mo¾né pokraèovat dál a~to v~oblasti arity operátorù a~typù jejich 
+asociativity. 
+V~knihovnì kombinátorù parserù byl vytvoøen obecný
+parser výrazù obsahujících unární i~binární operátory s~libovolným
+poètem priorit, u~kterých je navíc mo¾né specifikovat
+typ jejich asociativity (a to \verb+xf+, \verb+yf+, \verb+fx+, 
+\verb+fy+, \verb+xfx+, \verb+xfy+, \verb+yfx+ nebo \verb+yfy+).
+Z~u¾ivatelského zápisu je nejdøíve vygenerován parser ve formì
+environmentu, jen¾ je následnì pou¾it pro rozklad vstupního textu. 
+Pro vyhodnocování v~dobì rozkladu se navíc pou¾ívá vyhodnocovaè, který 
+je mo¾né specifikovat v~jednom z~jeho parametrù (podobnì jako tomu bylo 
+u~\verb+chainL+ v~èásti \ref{IteraceSeSemantickyRelevantnimiSeparatory}).
+Alespoò pro pøedstavu si na závìr této kapitoly uka¾me, jak by
+vypadalo volání tohoto konstruktoru, pokud by jsme jej chtìli pou¾ít
+pro analýzu podmno¾iny jazyka Prolog:
+\begin{quote}\begin{verbatim}
+?- s("saveTerm(File,Term):-
+|       openFile(File,Stream,write), 
+|        write(Term),
+|       closeFile(Stream,write)")+L 
+|  :->
+|     expression([[fx(":-",':-'),fx("?-",'?-')],
+|                 [xfx(":-",':-')],
+|                 [xfy(";",';')],
+|                 [xfy("->",'->')],
+|                 [xfy(",",',')],
+|                 [fy("not",'not')]
+|                ],
+|                factProlog(id)).
+\end{verbatim}\end{quote}
+Pro zkonstruování syntaktického stromu je zde pou¾ita místo 
+vyhodnocovaèe identita \verb+id/2+.
+
+\endinput
+-------------------------------------------------------------------------------
+Distfixní operátory

@@ -1,0 +1,7 @@
+./
+	Implementace predikatu :-@/1 umoznujici curryfikaci a generovani
+        kodu pro ni.
+        	showCurry/0   ...   vylistuje vytvoreny kod
+        	saveCurry/0   ...   ulozi vytvoreny kod do souboru
+        
+- EOF -

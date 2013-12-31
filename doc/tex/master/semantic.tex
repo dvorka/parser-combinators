@@ -1,0 +1,233 @@
+\section{Transformace syntaktického stromu}\label{TransformaceSyntaktickehoStromu} 
+Strukturální analýzu zdrojového textu provádìnou parsery mù¾eme
+rozdìlit na dvì podúlohy: na lexikální analýzu provádìjící rozklad na
+základní symboly, jen¾ jsou relevantní z~hlediska syntaktické analýzy,
+a~analýzu syntaktickou, která se zabývá jeho statickou strukturou.
+Na strukturální analýzu textu navazuje sémantická analýza, která
+pomocí pøídavných informací kontroluje konzistenci vstupu na vy¹¹í
+úrovni.
+                    
+Pøi kombinátorovém vytváøení parserù v¹echny tyto fáze zpravidla témìø
+splývají. Podúlohy strukturální analýzy textu zde tvoøí nedìlitelný
+celek a~omezená sémantická analýza mù¾e být provádìna pomocí mutátoru
+aplikace sémantické operace rovnì¾ ji¾ za bìhu parseru.
+
+V~této kapitole se budeme vìnovat prostøedkùm a~zpùsobùm transformace
+syntaktických stromù vydávaných parsery.
+
+\vskip 3mm
+Zastavme se nejprve na chvíli u~parserù terminálních symbolù. V¹echny
+dosud zavedené parsery z~této kategorie vydávají svùj výsledek
+v~reprezentacích pou¾ívajících ASCII kódy symbolù. Napøíklad
+\verb+symbol+ vydává ASCII kód akceptovaného znaku a~\verb+token+
+øetìzec~--- tedy prologovský seznam ASCII kódù. Pro dal¹í zpracování
+je v¹ak v~nìkterých situacích výhodnìj¹í vydávat výsledky ve formì
+atomù, napøíklad v~pøípadì \emph{scannerù} tj. lexikálních analyzátorù
+trasformujících vstup na posloupnost tokenù. 
+               
+Proto knihovna obsahuje varianty v¹ech parserù terminálních symbolù,
+které vydávají svùj výsledek ve formì atomù. Jsou odli¹eny pøipojením
+znaku \verb+'A'+ za název pùvodního parseru, napøíklad:\index{symbolA@\verb+symbolA+}\index{tokenA@\verb+tokenA+}
+\begin{quote}\begin{verbatim}
+symbolA(S,W):-
+ W :-> (fulfil(==(S)) <@ ascii2Atom).
+
+tokenA(String,W):-
+ W :-> (token(String) <@ string2Atom).
+\end{verbatim}\end{quote}
+Pøi pou¾ívání tìchto parserù v~dal¹ím textu se ke zpùsobu jejich
+zavedení ji¾ nebudeme vracet.
+
+\vskip 3mm
+V~dal¹ích dvou èástech se budeme vìnovat mutátoru aplikace sémantické
+operace a~predikátùm s~ním spojených.
+
+\subsection{Podpora mutátoru $<$$@$}
+Existuje urèitý okruh operací na syntaktických stromech, je¾ jsou
+velmi èasto vyu¾ívány pro jejich zpracování. Jak bylo zmínìno v~definici mutátoru \verb|<@|, predikáty reprezentující tyto operace
+mají rozhraní:
+\begin{quote}
+$fun(?A_1, \dots, ?A_m, +I, -O)$
+\end{quote}
+kde $A_i$ jsou argumenty specifikované pøímo pøi pou¾ití v~mutátoru aplikace sémantické operace:
+\begin{quote}
+$Parser$ \verb|<@| $fun(A_1, \dots, A_m)$
+\end{quote}
+$I$ je argument tvoøený výsledkem pøicházejícím z~parseru a~$O$ je
+výsledek operace $fun$.
+
+V~následujících odstavcích bude uveden pøehled nejdùle¾itìj¹ích
+predikátù pou¾ívaných v~dal¹ích kapitolách, aby byly shromá¾dìny
+na jednom místì a~v~prùbìhu dal¹ího textu nemuseli být samostatnì
+vysvìtlovány. Pro vìt¹í struènost pou¾ijeme pseudokód.
+
+\vskip 3mm
+První skupina je tvoøena predikáty pro konverzi hodnot. Signatura
+tìchto predikátù má obecnì tvar:
+\begin{quote}
+$srcFormat$\verb|2|$dstFormat(?A_1, \dots, ?A_m, +I, -O)$
+\end{quote}
+S~nìkterými z~tìchto predikátù jsme se ji¾ setkali, jako tøeba s~\verb|tuple2List|. Patøí sem také \verb+ascii2Atom+, \verb+lower2Upper+
+èi \verb+univ2List+ a~mnoho dal¹ích. V~pøípadech, které si to vy¾adují,
+jsou rovnì¾ definovány i~jejich symetrické varianty.
+
+
+\vskip 3mm
+\noindent
+Pro \emph{jednorázové} obecné transformace výsledkù tj. situace, kdy
+parser vydává jedinou derivaci, je
+pøipraven predikát \verb|alter|. Zpravidla jej budeme pou¾ívat pro
+ukládání výsledkù do struktur. Jeho první parametr se unifikuje s~pøicházejícím výsledkem parseru a~v~parametru druhém lze specifikovat
+jeho transformovanou verzi. Predikátem \verb|alter| lze napøíklad vyjádøit
+i~døíve zmínìný \verb|tuple2List|:\index{alter@\verb+alter+}
+\begin{quote}
+$Parser$ \verb|<@| $alter(A>B, [A|B])$
+\end{quote}
+Obvyklej¹í v¹ak bude spí¹e jeho pou¾ití pøi vytváøení stromových datových
+struktur. Pøedstavme si situaci, kdy získáváme z~parseru trojice
+obsahující v~první polo¾ce koøen nového stromu, v~druhé polo¾ce levý a~v~tøetí pravý podstrom. Transformace výsledku i~vytvoøení uzlu je s~pomocí predikátu \verb|alter| snadné:
+\begin{quote}
+$Parser$ \verb|<@| $alter(Root>(L>R), treeNode(L,Root,R))$
+\end{quote}
+V~kapitole \ref{AnalyzaVyrazu} vytvoøíme parser pøijímající jako
+vstup aritmetické výrazy, jen¾ analyzuje jejich strukturu a~provede
+následnì vyhodnocení. Pro øe¹ení jednoduchých úloh tohoto typu potøebujeme
+disponovat operací umo¾òující explicitní vyhodnocení aritmetického
+výrazu. Touto operací je \verb|eval|. Pøedpokládá vstup ve formì
+termu:\index{eval@\verb+eval+}
+\begin{quote}
+$ParseExpr$ \verb|<@| $eval$
+\end{quote}
+Provede vyhodnocení analogické pou¾ití standardního prologovského
+predikátu \verb|is/2|.
+
+\vskip 3mm
+
+Pøedev¹ím pro ladící úèely je pøipraven predikát \verb|show| a~jeho
+varianty \verb|showln|, \verb|showString| a~dal¹í, je¾ vypisují
+výsledek na standardní výstup. Predikáty zobrazují pøíchozí výsledek,
+ani¾ by jej jakýmkoli zpùsobem modifikovali.\index{showln@\verb+showln+}\index{showln@\verb+showln+}
+
+\vskip 3mm
+\noindent
+Zmíníme ji¾ pouze poslední dva predikáty. Prvním z~nich je\index{const@\verb+const+}
+\begin{quote}
+$Parser$ \verb|<@| $const(Const)$
+\end{quote}
+který ignoruje pøicházející výsledek a~na výstup vydává hodnotu
+$Const$~a druhým identita:\index{id@\verb+id+}
+\begin{quote}
+$Parser$ \verb|<@| $id$
+\end{quote}
+Pou¾ití nacházejí pøedev¹ím ve spojení s~dal¹ími operacemi, ale i~v~jiných konstruktorech parserù~--- v¹ude tam, kde daný kombinátor èi
+mutátor vy¾aduje predikát pro zpracování hodnoty, ale my ji chceme v~daném pøípadì zachovat.
+
+\subsection{Kolony}\index{kolony}
+A¾ dosud jsme v~pøípadech slo¾itìj¹ích transformací výsledkù parserù
+volili cestu definování jednoúèelového predikátu a~jeho následné
+pou¾ití v~mutátoru aplikace sémantické operace.
+                                          
+V~této èásti si pøedstavíme dva predikáty vy¹¹ího øádu, které umo¾ní
+zapisovat nìkteré slo¾itìj¹í operace na výsledcích pøímo v~parametru
+mutátoru~\verb|<@|.
+
+\vskip 3mm
+První z~nich pokrývá potøebu následné aplikace nìkolika operací.
+Pomocí predikátu \verb|=>|, jen¾ je definován rovnì¾ jako operátor,
+lze øetìzit sémantické operace nad syntaktickými stromy:\index{=>@\verb+=>+}
+\begin{quote}
+$Parser$ \verb|<@| $Goal_1$ \verb|=>| $Goal_2$
+\end{quote}
+Na syntaktický strom vydaný parserem je aplikována operace $Goal_1$ a~její výsledná hodnota se stává vstupním argumentem operace
+$Goal_2$. Nakonec je výsledek $Goal_2$ ulo¾en do seznamu úspì¹ných
+rozkladù.
+
+Obecnì lze samozøejmì øetìzit libovolný poèet operací:
+\begin{quote}
+$Parser$ \verb|<@| $Goal_1$ \verb|=>| \dots \verb|=>| $Goal_n$
+\end{quote}
+Syntaktický strom potom prochází celou \uv{kolonou} predikátù
+$Goal_i$.  V~ka¾dém kroku je pøíchozí hodnota transformována a~pøedána
+na vstup následující operace.
+
+Novì definovaný predikát \verb|=>| umo¾òuje efektivnìj¹í provedení
+této konstrukce. Bez nìj bychom museli vý¹e uvedený pøípad
+transformace v~nìkolika krocích implementovat výhradnì s~pomocí
+mutátoru aplikace sémantické operace:
+\begin{quote}
+$Parser$ \verb|<@| $Goal_1$ \verb|<@| \dots \verb|<@| $Goal_n$
+\end{quote}
+Takové zpracování obná¹í $n$ prùchodù seznamu úspì¹ných
+rozkladù. Zatímco s~rostoucí délkou struktury LOS se toto øe¹ení stává
+nepou¾itelným, pøi pou¾ití predikátu \verb|=>| jsou aplikovány v¹echny
+operace v~jednom kroku --- v¾dy tedy postaèuje jediný prùchod.
+
+\hskip 3mm\index{->>@\verb+->>+}
+V~úvodu zmínìný druhý predikát vy¹¹ího øádu je urèený pro specifikaci
+argumentù následujících \emph{za} výsledkem pocházejícím ze seznamu úspì¹ných
+rozkladù. Doposud bylo mo¾né pou¾ívat v~parametru mutátoru \verb|<@| pouze
+operace s~rozhraním:
+\begin{quote}
+$fun(A_1, \dots, A_n, LosItem, Result)$
+\end{quote}
+Kdy se za pøímo specifikované argumenty $A_i$ pøipojil buï mutátor aplikace
+sémantické operace nebo operátor \verb|=>| výstup parseru $LosItem$ a~parametr $Result$ v~nìm¾ je také výsledek operace vydán. Aby bylo mo¾né
+specifikovat také dal¹í parametry následující za polo¾kou struktury
+LOS tj. abychom mohli aplikovat operace tvaru:
+\begin{quote}
+$fun(A_1, \dots, A_n, LosItem, B_1, \dots, B_m, Result)$
+\end{quote}
+zavedeme predikát \verb|->>|, který po jednom pøidává parametry $B_i$. A¾ 
+teprve v~okam¾iku, kdy je pøipojen poslední parametr, je cíl doplnìn o~$Result$
+a~zavolán. Právì zde lze vyu¾ít mechanismu curryfikace, cíle jsou toti¾
+volány prostøednictvím predikátù \verb+:-@/1+ zavedeného v~kapitole 
+\ref{ProgramovaniVyssihoRadu}. Výsledky procházející kolonou~--- nemusí tedy 
+být pøímo vyhodnocovány, ale mù¾e dojít pouze k~èásteèné aplikaci, kterou
+lze uskuteènit i~ve více krocích.
+
+Predikát \verb|->>| je zaveden jako infixní operátor. Má ni¾¹í precedenci
+tj. vy¹¹í prioritu ne¾ \verb|=>|:
+\begin{quote}
+$Parser$ \verb|<@| $A$ \verb|->>| $B$ \verb|->>| $C$ \verb|=>| $D$ \verb|->>| $E$ \verb|->>| $F$\\
+\verb+ +$\Leftrightarrow$\\
+$Parser$ \verb|<@| ($A$\verb|->>|$B$\verb|->>|$C$) \verb|=>| ($D$\verb|->>|$E$\verb|->>|$F$)
+\end{quote}
+Jeho pou¾ití je pøínosné zejména pøi jeho vícenásobné zøetìzené 
+aplikaci~--- jak je vidìt na následujícím pøíkladu:
+\begin{quote}
+$Parser$ \verb|<@| $fun(A_1, \dots, A_n)$ \verb|->>| $B_1$ \verb|->>| \dots \verb|->>| $B_m$
+\end{quote}
+kde aplikovaná sémantická operace odpovídá:
+\begin{quote}
+\verb+:-@+ $[A_1, \dots, A_n,+LOS,B_1, \dots, B_m, -Result]$
+\end{quote}
+Oba nové operátory lze samozøejmì libovolnì kombinovat. Tak napøíklad
+zpracování výsledku:
+\begin{quote}
+$Parser$ \verb|<@| $fun_1$ \verb|=>| $fun_2(a,b)$ \verb|->>| $c$ \verb|->>| $d$\verb|->>| $e$ \verb|=>| $fun_3(g)$
+\end{quote}
+odpovídá následující transformaci hodnoty $LosItem$ na $Result$:
+\begin{quote}
+$fun_1(+LosItem,-F_1),$ $fun_2(a,b,+F_1,c,d,e,-F_2),$ $fun_3(g,+F_2,-Result)$
+\end{quote}
+
+\hskip 3mm
+\noindent
+Kolony zèitelòují kód parserù a~èiní jej srozumitelnìj¹ím. Bohu¾el
+nejsou zpravidla tak efektivní, jako je pou¾ití explicitnì definovaného
+jednoúèelového predikátu.
+
+Hlavní uplatnìní nacházejí v~parserech generovaných \uv{online}, kde
+hrají nezastupitelnou roli pøi transformacích syntaktického
+stromu.
+
+Jsou pøínosné i~pøi pøímém vytváøení parserù na pøíkazové øádce
+interpretu, kde mù¾eme snadno, a» u¾ pro ladící úèely èi z~jiného
+dùvodu, upravovat výstupní hodnoty parserù bez nutnosti pøidávání
+nového predikátu do databáze. 
+
+Zvá¾ení v¹ech hledisek pøi pou¾ití kolon --- tedy zejména rozhodnutí
+mezi mírou elegance a~efektivity, zále¾í pouze na programátorovi.
+
+\endinput
+-------------------------------------------------------------------------------

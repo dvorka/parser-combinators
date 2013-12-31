@@ -1,0 +1,10 @@
+#! /bin/bash
+
+if type br
+ then
+  bp
+ else
+  /usr/local/bin/binProlog/BinProlog5.75/bin/bp.pc.linux -l5 -h60000 -s35000 -t7024 -b7024 $1
+ fi 
+
+# EOF

@@ -1,0 +1,114 @@
+\section{Primitivní parsery}\label{PrimitivniParsery}
+Primitivní parsery jsou základními stavebními kameny kombinátorového
+vytváøení parserù~--- musíme tedy zaèít u~nich. 
+Mù¾eme je rozdìlit do dvou skupin podle toho, zda pøijímají
+nìjakou èást vstupního textu èi nikoli. Jediným
+zástupcem první skupiny je primitivum \verb|item|.
+Primitivy nále¾ejícími do skupiny druhé jsou ta, která \uv{pøijímají} pouze 
+prázdný vstup, sem patøí \verb|epsilon|, \verb|return| a~\verb|terminate|. 
+
+V~teorii gramatik je prázdný øetìzec oznaèován symbolem
+$\varepsilon$. V~duchu této tradice tedy definujme \verb|epsilon| jako
+primitivní parser, který pøijímá prázdný vstup a~jako výstup vrací
+prázdný syntaktický strom reprezentovaný atomem~\verb+[]+:\index{epsilon@\verb+epsilon+}
+\begin{quote}\begin{verbatim}
+epsilon(I+[I>[]]).
+\end{verbatim}\end{quote}
+Druhým primitivem, které si uká¾eme, je \verb|return|. Parser
+\verb|return| v¾dy uspìje, ani¾ by ze vstupu cokoli pøijal. Proto¾e výsledná
+hodnota, kterou vydává ka¾dý parser pøi úspì¹ném rozkladu, u~nìj
+nezávisí na vstupu, je explicitnì specifikována v~parametru $V$:\index{return@\verb+return+}
+\begin{quote}\begin{verbatim}
+return(V,I+[I>V]).
+\end{verbatim}\end{quote}
+Jeliko¾ \verb|return| je zobecnìním \verb|epsilon|, je samozøejmì mo¾né
+definovat \verb|epsilon| i~následujícím zpùsobem:	
+\begin{quote}\begin{verbatim}
+epsilon(W):-
+        return([],W).
+\end{verbatim}\end{quote}
+Opakem k~\verb|return| je primitivum \verb|terminate|. Parser
+\verb|terminate| sel¾e v¾dy, bez ohledu na obsah vstupu. Selhání vyjadøuje
+prázdný seznam úspì¹ných rozkladù:\index{terminate@\verb+terminate+}
+\begin{quote}\begin{verbatim}
+terminate(_+[]).
+\end{verbatim}\end{quote}
+% zvolnit nìjakou shrnující vìtou
+\noindent
+Tím máme definována primitiva \uv{pøijímající} prázdný vstup a~nyní
+ji¾ pøistupme k~definici parseru \verb|item|, jen¾ pøijímá z~neprázdného 
+vstupu první polo¾ku. Význam tohoto primitiva tkví pøedev¹ím
+v~tom, ¾e je realizací elementární operace nad vstupem zmínìné v~èásti 
+\ref{RozhraniParseru}. V¹echny dal¹í parsery pracující se vstupem
+mohou tedy být pomocí nìj definovány. Nech» tedy \verb|item| pøijme 
+z~neprázdného vstupu první polo¾ku a~v~pøípadì prázdného vstupu a» sel¾e:
+\begin{quote}\begin{verbatim}
+item(s([S|Is])+[s(Is)>S]).
+item(s([])+[]).
+\end{verbatim}\end{quote}
+Tento parser je sice dùle¾itý, ale sám o~sobì není pøíli¹
+pøínosný. Mù¾eme v¹ak pomocí nìj definovat jiný, který ji¾ rozeznává
+dané symboly. Bylo by samozøejmì mo¾né specifikovat pøípustné symboly
+výètem, my v¹ak zvolíme elegantnìj¹í øe¹ení. Pro rozli¹ení pøípustných
+symbolù pou¾ijeme podmínku reprezentovanou predikátem, který bude
+parametrem $C$ tohoto parseru:\index{fulfil@\verb+fulfil+}
+\begin{quote}\begin{verbatim}
+fulfil(C,I+L):-
+        item(I+Li) 
+        -> (Li=[N>R],:-@ [C,[R]] -> return(R,N+L)
+                                 ;  terminate(I+L)).
+\end{verbatim}\end{quote}
+Parser \verb|fulfil| se nejdøíve pokusí pøijmout pomocí primitiva
+\verb|item| jeden symbol ze vstupu. Jestli¾e uspìje, zkontroluje, zda
+symbol splòuje podmínku $C$ a~vrátí jej pomocí primitiva
+\verb|return|. V~opaèném pøípadì signalizuje neúspìch parserem
+\verb|terminate|. Pou¾ití primitiv není bezpodmíneènì nutné, ale je patrné,
+¾e uèinilo zdrojový text èitelnìj¹í.
+
+Pomocí \verb|fulfil| ji¾ mù¾eme definovat parser pro jednotlivé
+polo¾ky vstupu, jen¾ z~pochopitelných dùvodù ponese název symbol:\index{symbol@\verb+symbol+}
+\begin{quote}\begin{verbatim}
+symbol(S,W):-
+       fulfil(==(S),W).
+\end{verbatim}\end{quote}
+Stejným zpùsobem zaveïme je¹tì dva parsery, které vyu¾ijeme v~dal¹ím
+textu:
+\begin{quote}\begin{verbatim}
+lower(W):-
+       fulfil(isLwrChar,W).
+
+upper(W):-
+       fulfil(isUprChar,W).
+\end{verbatim}\end{quote}
+Takto bychom mohli pokraèovat a~definovat dal¹í a~dal¹í parsery,
+podobné tìm vý¹e uvedeným, jako tøeba \verb|digit|, \verb|bracket| 
+èi \verb|consonant|. Základ knihovny kombinátorù
+parserù tvoøí sada právì takových parserù. Rovnì¾ jsou pøipraveny
+predikáty pro klasifikaci znakù (jako \verb|isLwrChar|), které
+lze pou¾ít spoleènì s~primitivem \verb|fulfil|. 
+
+V~situacích, kdy nemáme k~dispozici vhodný predikát, který by mohl být
+podmínkou parseru \verb|fulfil|, proto¾e jeho vytváøení pro jedno pou¾ití by
+nemìlo smysl, nebo pokud získáme, tøeba i~za bìhu, pøípustné symboly ve
+formì ji¾ zmínìného výètu, budeme pou¾ívat parser \verb|symbols|:\index{symbols@\verb+symbols+}
+\begin{quote}\begin{verbatim}
+symbols(A,I+L):-
+        item(I+Li) 
+         -> (Li=[N>R],member(R,A) -> return(R,N+L)
+                                  ;  terminate(I+L)).
+\end{verbatim}\end{quote}
+Jako pøíklad si uka¾me parser pro takzvané \uv{prázdné znaky}. Pou¾ití 
+\verb|fulfil| s~explicitnì definovaným predikátem podmínky v~nìm radìji
+nahradíme výètem jednotlivých pøípustných znakù:\index{whiteSpace@\verb+whiteSpace+}
+\begin{quote}\begin{verbatim}
+whiteSpace(W):-
+        symbols([32,9,13,10],W).
+\end{verbatim}\end{quote}
+Samotné primitivní parsery, tak jak jsme je definovali, nejsou pøíli¹
+silné. Teprve v~následujících èástech proká¾í svùj skuteèná význam.
+Pøedstavíme si konstruktory parserù, které právì pomocí manipulací 
+s~primitivy umo¾ní vytváøení parserù pro øe¹ení reálných úloh
+syntaktické analýzy.
+
+\endinput
+-------------------------------------------------------------------------------

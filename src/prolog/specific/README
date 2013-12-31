@@ -1,0 +1,15 @@
+./
+
+bp.pl
+swi.pl
+lpa.pl
+	Predikaty specificke pro ruzne implementace Prologu (jako napriklad 
+        prace se soubory).
+
+installBP.pl
+	Vytvoreni pseudoaplikace pro BinProlog.
+
+swi.sh
+	Sablona pro vytvoreni pseudoaplikace ve SWI Prologu.
+
+- EOF -

@@ -1,0 +1,11 @@
+
+specializer.pl
+	Verze predikatu :-> umoznujici  generovani specializovaneho kodu. 
+        Predikaty jsou nezavisle na implementaci Prologu.
+
+swi.pl
+bp.pl
+	Specializovane verze :-> spolecne s kodem optimalizovanym
+        pro jednotlive implementace.
+
+-EOF-
