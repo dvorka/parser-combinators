@@ -7,10 +7,12 @@ A Prolog library of parser combinators.
 DESCRIPTION
 ===========
 
-Parser is a program which does processing of a linear source text. It analyzes structure
-of the text and converts it to an output format. One of the options for creation 
-of parsers is the bottom-up approach. A parser for the analysis of a complex 
-structure is created by combination of parsers for simpler parts.
+A parser is a program that breaks data into smaller elements for easy translation into
+another format. A parser takes input in the form of a sequence of tokens or program 
+instructions and builds a data structure in the form of a parse tree or another output
+format.One of the options for creation of parsers
+is their bottom-up creation. A parser for the analysis of complex structures is created by
+combinining parsers for simpler parts.
 
 Parser Combinators is a library of parsers and their combinators that supports efficient
 creation of parsers for new formats and lanuguages.
